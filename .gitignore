@@ -1,0 +1,44 @@
+# Visual Studio / .NET Core build outputs
+[Db]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+[Aa]pp[Dd]ata/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+**/bin/
+**/obj/
+
+# Angular / Node build outputs & packages
+Frontend/shop-nest/dist/
+Frontend/shop-nest/node_modules/
+Frontend/shop-nest/.angular/
+Frontend/shop-nest/tmp/
+Frontend/shop-nest/out-tsc/
+Frontend/shop-nest/bazel-out/
+Frontend/shop-nest/.vscode/*
+!Frontend/shop-nest/.vscode/settings.json
+!Frontend/shop-nest/.vscode/tasks.json
+!Frontend/shop-nest/.vscode/launch.json
+!Frontend/shop-nest/.vscode/extensions.json
+Frontend/shop-nest/.history/*
+Frontend/shop-nest/coverage/
+Frontend/shop-nest/testem.log
+Frontend/shop-nest/connect.lock
+
+# Logs
+*.log
+**/ng-serve.err.log
+**/ng-serve.out.log
+**/api-err.log
+**/api-out.log
+
+# Operating System files
+.DS_Store
+Thumbs.db
+Desktop.ini

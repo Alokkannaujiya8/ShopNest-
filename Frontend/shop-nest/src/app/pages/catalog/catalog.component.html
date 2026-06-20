@@ -1,0 +1,44 @@
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Catalog</p>
+    <h1>Products</h1>
+  </div>
+  <button class="ghost" routerLink="/cart">View cart</button>
+</section>
+
+<section class="toolbar">
+  <input placeholder="Search products" [(ngModel)]="query" (keyup.enter)="load()" />
+  <select [(ngModel)]="categoryId" (change)="load()">
+    <option value="">All categories</option>
+    <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>
+  </select>
+  <input type="number" placeholder="Min" [(ngModel)]="minPrice" />
+  <input type="number" placeholder="Max" [(ngModel)]="maxPrice" />
+  <label class="check"><input type="checkbox" [(ngModel)]="inStock" /> In stock</label>
+  <button class="primary" (click)="load()">Search</button>
+</section>
+
+<p class="notice" *ngIf="notice">{{ notice }}</p>
+<p class="muted" *ngIf="loading">Loading products...</p>
+
+<section class="product-grid">
+  <article class="card product-card" *ngFor="let product of products">
+    <img [src]="image(product)" [alt]="product.name" />
+    <div class="card-body">
+      <span class="tag">{{ product.category.name }}</span>
+      <h2>{{ product.name }}</h2>
+      <p>{{ product.description }}</p>
+      <div class="row">
+        <strong>{{ product.price | currency: 'INR' }}</strong>
+        <span [class.warn]="product.stockQuantity <= 5">{{ product.stockQuantity }} left</span>
+      </div>
+      <button class="primary" (click)="add(product)" [disabled]="product.stockQuantity < 1">Add to cart</button>
+    </div>
+  </article>
+</section>
+
+<section class="pager" *ngIf="totalPages > 1">
+  <button class="ghost" [disabled]="page === 1" (click)="load(page - 1)">Previous</button>
+  <span>Page {{ page }} of {{ totalPages }}</span>
+  <button class="ghost" [disabled]="page === totalPages" (click)="load(page + 1)">Next</button>
+</section>

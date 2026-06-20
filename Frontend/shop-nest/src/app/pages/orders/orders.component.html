@@ -1,0 +1,42 @@
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Orders</p>
+    <h1>Tracking</h1>
+  </div>
+</section>
+
+<p class="notice" *ngIf="paymentMessage">{{ paymentMessage }}</p>
+
+<div class="panel actions" *ngIf="activeSession" style="margin-bottom: 1.5rem; padding: 0.8rem 1rem; justify-content: flex-start; gap: 1rem;">
+  <strong>Sandbox Payment Simulator:</strong>
+  <button class="primary small" type="button" (click)="simulateSuccess()">Simulate Success</button>
+  <button class="danger small" type="button" (click)="simulateFailure()">Simulate Failure</button>
+</div>
+
+<section class="order-list">
+  <article class="panel order-card" *ngFor="let order of orders">
+    <div class="row">
+      <div>
+        <strong>{{ order.orderNumber }}</strong>
+        <p>{{ order.items.length }} items</p>
+      </div>
+      <span class="status">{{ order.status }}</span>
+    </div>
+    <div class="steps">
+      <span [class.done]="['Pending', 'Shipped', 'Delivered'].includes(order.status)">Pending</span>
+      <span [class.done]="['Shipped', 'Delivered'].includes(order.status)">Shipped</span>
+      <span [class.done]="order.status === 'Delivered'">Delivered</span>
+    </div>
+    <div class="line-item" *ngFor="let item of order.items">
+      <span>{{ item.productName }} × {{ item.quantity }}</span>
+      <strong>{{ item.lineTotal | currency: 'INR' }}</strong>
+    </div>
+    <div class="row total">
+      <span>Total</span>
+      <strong>{{ order.totalAmount | currency: 'INR' }}</strong>
+    </div>
+    <button class="primary" *ngIf="order.payment?.status !== 'Succeeded'" (click)="pay(order)">Create payment</button>
+  </article>
+</section>
+
+<p class="muted" *ngIf="!orders.length">No orders yet.</p>

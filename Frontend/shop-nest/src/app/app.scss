@@ -1,0 +1,392 @@
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar Styles */
+.app-sidebar {
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding: 1.75rem 1.5rem;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 280px;
+  z-index: 100;
+}
+
+.sidebar-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2.25rem;
+}
+
+.brand {
+  align-items: center;
+  color: var(--ink);
+  display: inline-flex;
+  font-weight: 800;
+  gap: 0.65rem;
+  text-decoration: none;
+}
+
+.brand-mark {
+  background: var(--accent);
+  border-radius: 8px;
+  color: white;
+  display: grid;
+  font-size: 1.15rem;
+  font-weight: 900;
+  height: 38px;
+  place-items: center;
+  width: 38px;
+}
+
+.brand-text {
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.sidebar-close-btn {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+  display: none;
+  font-size: 1.75rem;
+  line-height: 1;
+  padding: 0.25rem;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sidebar-nav a {
+  align-items: center;
+  border-radius: 8px;
+  color: var(--muted);
+  display: flex;
+  font-size: 0.95rem;
+  font-weight: 600;
+  gap: 0.8rem;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.sidebar-nav a:hover {
+  background: var(--soft);
+  color: var(--ink);
+}
+
+.sidebar-nav a.active {
+  background: var(--soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.nav-icon {
+  font-size: 1.15rem;
+}
+
+.badge {
+  background: var(--accent);
+  border-radius: 99px;
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 800;
+  margin-left: auto;
+  padding: 0.15rem 0.5rem;
+}
+
+.sidebar-footer {
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: auto;
+  padding-top: 1.5rem;
+}
+
+/* Connection Status pill */
+.connection-status {
+  align-items: center;
+  background: var(--soft);
+  border-radius: 6px;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 700;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  width: fit-content;
+}
+
+.status-dot {
+  border-radius: 50%;
+  height: 8px;
+  position: relative;
+  width: 8px;
+}
+
+.status-dot::after {
+  animation: pulse 1.8s infinite ease-in-out;
+  border-radius: 50%;
+  content: '';
+  inset: -2px;
+  opacity: 0;
+  position: absolute;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+
+/* Connection states coloring */
+[data-state="connected"] .status-dot {
+  background: #10b981;
+}
+[data-state="connected"] .status-dot::after {
+  border: 1.5px solid #10b981;
+}
+[data-state="connected"] .status-text {
+  color: #065f46;
+}
+
+[data-state="connecting"] .status-dot,
+[data-state="reconnecting"] .status-dot {
+  background: #f59e0b;
+}
+[data-state="connecting"] .status-dot::after,
+[data-state="reconnecting"] .status-dot::after {
+  border: 1.5px solid #f59e0b;
+}
+[data-state="connecting"] .status-text,
+[data-state="reconnecting"] .status-text {
+  color: #92400e;
+}
+
+[data-state="disconnected"] .status-dot {
+  background: var(--danger);
+}
+[data-state="disconnected"] .status-dot::after {
+  border: 1.5px solid var(--danger);
+}
+[data-state="disconnected"] .status-text {
+  color: #991b1b;
+}
+
+/* Profile Details Card */
+.profile-card {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.profile-avatar {
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--accent);
+  display: grid;
+  font-size: 1.05rem;
+  font-weight: 800;
+  height: 42px;
+  place-items: center;
+  width: 42px;
+}
+
+.profile-info {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-role {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.footer-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.65rem;
+  justify-content: space-between;
+}
+
+.icon-btn {
+  align-items: center;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  height: 38px;
+  justify-content: center;
+  transition: all 0.2s ease;
+  width: 38px;
+}
+
+.icon-btn:hover {
+  background: var(--line);
+}
+
+.logout-btn {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 700;
+  min-height: 38px;
+  padding: 0.5rem 0.8rem;
+}
+
+.login-btn {
+  flex: 1;
+  font-size: 0.85rem;
+  min-height: 38px;
+  padding: 0.5rem 0.8rem;
+}
+
+/* Main Content Wrapper */
+.app-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-height: 100vh;
+  min-width: 0;
+}
+
+/* Topbar for Mobile */
+.app-topbar {
+  align-items: center;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  display: none;
+  height: 64px;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 80;
+}
+
+.hamburger-btn {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  height: 24px;
+  justify-content: center;
+  padding: 0;
+  width: 24px;
+}
+
+.hamburger-btn span {
+  background: var(--ink);
+  border-radius: 2px;
+  height: 2.5px;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.topbar-brand-mobile {
+  align-items: center;
+  color: var(--ink);
+  display: flex;
+  font-weight: 800;
+  gap: 0.5rem;
+}
+
+.topbar-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.connection-status-pill-mobile {
+  background: var(--soft);
+  border-radius: 50%;
+  display: grid;
+  height: 28px;
+  place-items: center;
+  width: 28px;
+}
+
+.connection-status-pill-mobile .status-dot {
+  height: 8px;
+  width: 8px;
+}
+
+.app-main {
+  flex-grow: 1;
+  margin: 0 auto;
+  max-width: 1320px;
+  padding: 2.25rem 2rem;
+  width: 100%;
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: fixed;
+  transition: opacity 0.3s ease;
+  z-index: 90;
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+  .app-sidebar {
+    bottom: 0;
+    left: 0;
+    position: fixed;
+    top: 0;
+    transform: translateX(-100%);
+  }
+
+  .app-sidebar.active {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sidebar-close-btn {
+    display: block;
+  }
+
+  .app-topbar {
+    display: flex;
+  }
+
+  .app-main {
+    padding: 1.5rem 1rem;
+  }
+}

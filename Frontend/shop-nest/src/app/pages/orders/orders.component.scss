@@ -1,0 +1,21 @@
+:host {
+  display: block;
+}
+
+.order-card {
+  overflow: hidden;
+}
+
+.status {
+  justify-self: end;
+}
+
+.steps {
+  margin: 0.25rem 0;
+}
+
+@media (max-width: 640px) {
+  .status {
+    justify-self: start;
+  }
+}

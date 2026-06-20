@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="ShopNest.API/ShopNest.API.csproj" />
+  <Project Path="ShopNest.Application/ShopNest.Application.csproj" />
+  <Project Path="ShopNest.Domain/ShopNest.Domain.csproj" />
+  <Project Path="ShopNest.Infrastructure/ShopNest.Infrastructure.csproj" />
+</Solution>

@@ -1,0 +1,27 @@
+:host {
+  display: block;
+}
+
+.product-card {
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.product-card:hover {
+  box-shadow: 0 18px 42px rgba(24, 32, 28, 0.12);
+  transform: translateY(-2px);
+}
+
+.product-card h2 {
+  line-height: 1.25;
+}
+
+.toolbar input[type='number'] {
+  min-width: 92px;
+}
+
+.pager span {
+  color: var(--muted);
+  font-weight: 700;
+}

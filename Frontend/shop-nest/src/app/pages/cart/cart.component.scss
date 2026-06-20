@@ -1,0 +1,21 @@
+:host {
+  display: block;
+}
+
+.summary h2 {
+  margin-bottom: 0.25rem;
+}
+
+.line-item input {
+  text-align: center;
+}
+
+.summary textarea {
+  min-height: 130px;
+}
+
+@media (max-width: 640px) {
+  .line-item input {
+    max-width: 120px;
+  }
+}

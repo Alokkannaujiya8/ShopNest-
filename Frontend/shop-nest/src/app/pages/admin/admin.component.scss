@@ -1,0 +1,34 @@
+:host {
+  display: block;
+}
+
+.stats {
+  align-items: stretch;
+}
+
+.stat {
+  min-height: 104px;
+}
+
+.admin-grid {
+  margin-top: 1rem;
+}
+
+.table-panel h2,
+.panel h2 {
+  margin-bottom: 0.25rem;
+}
+
+.table-row input {
+  max-width: 120px;
+}
+
+.actions.compact {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .stat {
+    min-height: auto;
+  }
+}

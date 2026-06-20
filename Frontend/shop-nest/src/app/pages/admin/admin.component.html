@@ -1,0 +1,130 @@
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Admin</p>
+    <h1>Operations</h1>
+  </div>
+</section>
+
+<section class="stats">
+  <article class="stat"><span>Customers</span><strong>{{ stats?.customers || 0 }}</strong></article>
+  <article class="stat"><span>Products</span><strong>{{ stats?.products || 0 }}</strong></article>
+  <article class="stat"><span>Low stock</span><strong>{{ stats?.lowStockProducts || 0 }}</strong></article>
+  <article class="stat"><span>Orders</span><strong>{{ stats?.orders || 0 }}</strong></article>
+  <article class="stat"><span>Revenue</span><strong>{{ stats?.revenue || 0 | currency: 'INR' }}</strong></article>
+  <article class="stat"><span>Pending</span><strong>{{ stats?.pendingOrders || 0 }}</strong></article>
+</section>
+
+<!-- Real-Time Online Dashboard Section -->
+<section class="page-head" style="margin-top: 2rem;">
+  <div>
+    <p class="eyebrow">Real-Time</p>
+    <h1>Online Tracking</h1>
+  </div>
+</section>
+
+<section class="stats" *ngIf="signalr.onlineStats() as online">
+  <article class="stat"><span>Online Users</span><strong>{{ online.totalOnlineUsers }}</strong></article>
+  <article class="stat"><span>Active Connections</span><strong>{{ online.activeConnections }}</strong></article>
+  <article class="stat"><span>Logged-In Customers</span><strong>{{ online.loggedInCustomers }}</strong></article>
+  <article class="stat"><span>Logged-Offline Customers</span><strong>{{ online.loggedOutCustomers }}</strong></article>
+</section>
+
+<!-- Notifications Feed & Active Connection Table -->
+<section class="admin-grid" style="margin-top: 1.5rem; grid-template-columns: 1fr 1fr; margin-bottom: 2rem;">
+  <!-- Live Notifications Feed -->
+  <article class="panel" style="max-height: 400px; overflow-y: auto;">
+    <h2>Live Activity Log</h2>
+    <div class="muted" *ngIf="!signalr.notifications().length">Listening for real-time events...</div>
+    <div *ngFor="let notification of signalr.notifications()" class="notice" style="margin: 0.5rem 0; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.2rem;">
+      <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: bold;">
+        <span class="eyebrow">{{ notification.type }}</span>
+        <span class="muted">{{ notification.timestamp | date:'mediumTime' }}</span>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--ink); margin-top: 0.2rem;">{{ notification.message }}</p>
+    </div>
+  </article>
+
+  <!-- Active Connection Details -->
+  <article class="panel" style="max-height: 400px; overflow-y: auto;" *ngIf="signalr.onlineStats() as online">
+    <h2>Active Users</h2>
+    <div class="muted" *ngIf="!online.activeUsersList.length">No active connections.</div>
+    <div *ngFor="let conn of online.activeUsersList" class="line-item" style="grid-template-columns: 1fr auto; padding: 0.5rem 0;">
+      <div>
+        <strong>{{ conn.fullName }}</strong>
+        <p style="font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem;">Role: {{ conn.role }} | ConnID: {{ conn.connectionId.substring(0, 8) }}...</p>
+      </div>
+      <div style="text-align: right; font-size: 0.8rem;">
+        <span class="tag">Active</span>
+        <p style="color: var(--muted); font-size: 0.75rem; margin-top: 0.4rem;">Activity: {{ conn.lastActivityTime | date:'mediumTime' }}</p>
+      </div>
+    </div>
+  </article>
+</section>
+
+
+<p class="notice" *ngIf="notice">{{ notice }}</p>
+
+<section class="admin-grid">
+  <form class="panel" (ngSubmit)="saveProduct()">
+    <h2>{{ editingId ? 'Edit product' : 'New product' }}</h2>
+    <label>Name <input name="name" [(ngModel)]="productForm.name" required /></label>
+    <label>Description <textarea name="description" [(ngModel)]="productForm.description" rows="4"></textarea></label>
+    <div class="form-row">
+      <label>Price <input type="number" name="price" [(ngModel)]="productForm.price" required /></label>
+      <label>Stock <input type="number" name="stock" [(ngModel)]="productForm.stockQuantity" required /></label>
+    </div>
+    <label>
+      Category
+      <select name="categoryId" [(ngModel)]="productForm.categoryId" required>
+        <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" name="isActive" [(ngModel)]="productForm.isActive" /> Active</label>
+    <div class="actions">
+      <button class="primary" type="submit">Save product</button>
+      <button class="ghost" type="button" (click)="resetForm()">Clear</button>
+    </div>
+  </form>
+
+  <form class="panel" (ngSubmit)="saveCategory()">
+    <h2>Categories</h2>
+    <label>Category name <input name="categoryName" [(ngModel)]="categoryName" required /></label>
+    <button class="primary" type="submit">Add category</button>
+    <div class="chips">
+      <span *ngFor="let category of categories">{{ category.name }}</span>
+    </div>
+  </form>
+</section>
+
+<section class="panel table-panel">
+  <h2>Inventory</h2>
+  <div class="table-row head">
+    <span>Product</span><span>Price</span><span>Stock</span><span>Status</span><span>Actions</span>
+  </div>
+  <div class="table-row" *ngFor="let product of products">
+    <span>{{ product.name }}</span>
+    <span>{{ product.price | currency: 'INR' }}</span>
+    <input type="number" [(ngModel)]="product.stockQuantity" [ngModelOptions]="{ standalone: true }" />
+    <label class="check"><input type="checkbox" [(ngModel)]="product.isActive" [ngModelOptions]="{ standalone: true }" /> Active</label>
+    <span class="actions compact">
+      <button class="ghost" type="button" (click)="edit(product)">Edit</button>
+      <button class="ghost" type="button" (click)="updateInventory(product)">Stock</button>
+      <label class="file-button">Image <input type="file" accept="image/*" (change)="upload(product, $event)" /></label>
+      <button class="danger" type="button" (click)="deleteProduct(product)">Delete</button>
+    </span>
+  </div>
+</section>
+
+<section class="panel table-panel">
+  <h2>Orders</h2>
+  <div class="table-row order-admin" *ngFor="let order of orders">
+    <span>{{ order.orderNumber }}</span>
+    <strong>{{ order.totalAmount | currency: 'INR' }}</strong>
+    <select [ngModel]="order.status" [ngModelOptions]="{ standalone: true }" (ngModelChange)="updateOrder(order, $event)">
+      <option value="Pending">Pending</option>
+      <option value="Shipped">Shipped</option>
+      <option value="Delivered">Delivered</option>
+      <option value="Cancelled">Cancelled</option>
+    </select>
+  </div>
+</section>
