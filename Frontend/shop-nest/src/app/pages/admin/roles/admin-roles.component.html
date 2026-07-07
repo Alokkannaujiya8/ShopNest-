@@ -1,0 +1,130 @@
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Administration</p>
+    <h1>Role Management</h1>
+  </div>
+  <button class="primary" (click)="openCreateModal()">
+    <span class="icon">+</span> New Role
+  </button>
+</section>
+
+<!-- Alerts Feed -->
+<p class="notice success" *ngIf="notice">{{ notice }}</p>
+<p class="notice error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+<!-- Filters Panel -->
+<section class="filters-panel panel">
+  <div class="filter-inputs">
+    <div class="search-box">
+      <input type="text" [(ngModel)]="search" placeholder="Search roles by code or display name..." (keyup.enter)="onSearch()" />
+      <button class="primary" (click)="onSearch()">Search</button>
+    </div>
+  </div>
+</section>
+
+<!-- Data Table -->
+<section class="panel table-panel">
+  <h2>Roles List ({{ totalCount }})</h2>
+  
+  <div class="table-container">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Role Code</th>
+          <th>Display Name</th>
+          <th>Description</th>
+          <th>Status</th>
+          <th>Created Date</th>
+          <th class="actions-header">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let role of roles">
+          <td class="bold-text">
+            <span class="code-font">{{ role.name }}</span>
+          </td>
+          <td>{{ role.displayName }}</td>
+          <td><span class="muted">{{ role.description || 'No description provided.' }}</span></td>
+          <td>
+            <span class="status-badge" [class.active]="role.isActive" [class.inactive]="!role.isActive" (click)="toggleActivation(role)">
+              {{ role.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td>
+            <span class="small-text">{{ role.createdAtUtc | date:'short' }}</span>
+          </td>
+          <td class="actions compact">
+            <button class="ghost" (click)="openEditModal(role)">Edit</button>
+            <button class="danger" [disabled]="['Admin', 'Customer', 'Seller', 'SuperAdmin'].includes(role.name)" (click)="deleteRole(role)">
+              Delete
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="!roles.length">
+          <td colspan="6" class="text-center muted-row">No roles found matching query.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-panel" *ngIf="totalPages > 1">
+    <button class="ghost" [disabled]="page === 1" (click)="changePage(page - 1)">Previous</button>
+    <span class="page-info">Page <strong>{{ page }}</strong> of <strong>{{ totalPages }}</strong></span>
+    <button class="ghost" [disabled]="page === totalPages" (click)="changePage(page + 1)">Next</button>
+  </div>
+</section>
+
+<!-- ==========================================
+     CREATE ROLE MODAL
+     ========================================== -->
+<div class="modal-backdrop" *ngIf="showCreateModal">
+  <div class="modal-panel">
+    <h2>Create New Role</h2>
+    <form (ngSubmit)="saveNewRole()">
+      <label>Role Code (e.g. Manager)
+        <input type="text" [(ngModel)]="createForm.name" name="name" required placeholder="No spaces allowed" />
+      </label>
+      
+      <label>Display Name
+        <input type="text" [(ngModel)]="createForm.displayName" name="displayName" required />
+      </label>
+
+      <label>Description
+        <textarea [(ngModel)]="createForm.description" name="description" rows="3"></textarea>
+      </label>
+
+      <div class="modal-actions">
+        <button class="primary" type="submit">Create Role</button>
+        <button class="ghost" type="button" (click)="showCreateModal = false">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ==========================================
+     EDIT ROLE MODAL
+     ========================================== -->
+<div class="modal-backdrop" *ngIf="showEditModal">
+  <div class="modal-panel">
+    <h2>Edit Role: {{ selectedRole?.name }}</h2>
+    <form (ngSubmit)="saveUpdateRole()">
+      <label>Display Name
+        <input type="text" [(ngModel)]="updateForm.displayName" name="displayName" required />
+      </label>
+
+      <label>Description
+        <textarea [(ngModel)]="updateForm.description" name="description" rows="3"></textarea>
+      </label>
+
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="updateForm.isActive" name="isActive" /> Active Status
+      </label>
+
+      <div class="modal-actions">
+        <button class="primary" type="submit">Save Changes</button>
+        <button class="ghost" type="button" (click)="showEditModal = false">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>

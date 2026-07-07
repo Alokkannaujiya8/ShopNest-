@@ -1,0 +1,158 @@
+.product-form-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .product-form-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.span-full {
+  grid-column: span 2;
+}
+
+.form-checkbox-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+// Gallery styles
+.existing-gallery {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.gallery-item-card {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  background-color: #fafafa;
+}
+
+.gallery-item-card img {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.gallery-item-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.order-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.upload-control-box {
+  border: 2px dashed #ccc;
+  padding: 1.5rem;
+  text-align: center;
+  border-radius: 6px;
+}
+
+.pending-files-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.pending-files-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+// Variants
+.variants-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.variant-item-badge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.attrib-pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  background-color: #e0f2f1;
+  color: #004d40;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  margin-right: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.add-variant-box {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 6px;
+  background-color: #fbfbfb;
+}
+
+.attribute-builder {
+  border-top: 1px solid #eee;
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.pending-attribs-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.attrib-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #efebe9;
+  color: #4e342e;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+}

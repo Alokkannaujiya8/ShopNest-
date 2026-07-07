@@ -30,4 +30,7 @@ public sealed class PaymentSettings
     public string StripeWebhookSecret { get; set; } = string.Empty;
     public string RazorpayKeyId { get; set; } = string.Empty;
     public string RazorpayKeySecret { get; set; } = string.Empty;
+    public string PaypalClientId { get; set; } = string.Empty;
+    public string PaypalClientSecret { get; set; } = string.Empty;
+    public string PaypalWebhookSecret { get; set; } = string.Empty;
 }

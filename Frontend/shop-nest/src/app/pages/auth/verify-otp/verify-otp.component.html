@@ -1,0 +1,53 @@
+<section class="auth-shell">
+  <form class="panel auth-panel" (submit)="onSubmit(); $event.preventDefault()">
+    <div class="auth-header">
+      <p class="eyebrow">ShopNest Security</p>
+      <h1>Verify Email OTP</h1>
+      <p class="auth-subtitle">We sent a 6-digit code to: <br/><strong>{{ email() }}</strong></p>
+    </div>
+
+    <!-- OTP 6-Digit input boxes -->
+    <div class="otp-boxes-container">
+      <input 
+        *ngFor="let digit of otpDigits(); let i = index"
+        [id]="'otp-' + i"
+        type="text" 
+        class="otp-digit-box"
+        maxlength="1"
+        [value]="digit"
+        (input)="onInput($event, i)"
+        (keydown)="onKeyDown($event, i)"
+        (paste)="onPaste($event)"
+        autocomplete="off"
+      />
+    </div>
+
+    <!-- Countdown Timer -->
+    <div class="otp-actions">
+      <div class="timer-text" *ngIf="!canResend()">
+        Resend code in <strong>{{ formattedTime() }}</strong>
+      </div>
+      <button 
+        type="button" 
+        class="resend-btn" 
+        *ngIf="canResend()" 
+        (click)="resendOtp()" 
+        [disabled]="loading()"
+      >
+        Resend OTP Code
+      </button>
+    </div>
+
+    <!-- Submit Button -->
+    <button class="primary" type="submit" [disabled]="loading()">
+      <span *ngIf="loading()">Verifying...</span>
+      <span *ngIf="!loading()">Verify & Log In</span>
+    </button>
+
+    <div class="back-link-container">
+      <a routerLink="/auth/login" class="back-link">
+        Back to Sign In
+      </a>
+    </div>
+  </form>
+</section>

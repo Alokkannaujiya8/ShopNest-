@@ -6,6 +6,7 @@ namespace ShopNest.Application.Interfaces;
 public interface IImageStorageService
 {
     Task<ImageUploadResult> UploadAsync(Stream stream, string fileName, CancellationToken cancellationToken);
+    Task DeleteAsync(string publicId, CancellationToken cancellationToken = default);
 }
 
 public interface IOrderEventPublisher

@@ -1,0 +1,118 @@
+<div class="app-layout">
+  <!-- Admin Sidebar drawer container -->
+  <aside class="app-sidebar" [class.active]="isSidebarOpen()">
+    <div class="sidebar-header">
+      <a class="brand" routerLink="/admin" (click)="closeSidebar()" aria-label="Admin home">
+        <span class="brand-mark">A</span>
+        <span class="brand-text">Admin Portal</span>
+      </a>
+      <button class="sidebar-close-btn" type="button" (click)="closeSidebar()" aria-label="Close sidebar">×</button>
+    </div>
+
+    <!-- Admin Sidenav items list -->
+    <nav class="sidebar-nav">
+      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeSidebar()">
+        <span class="nav-icon">📊</span>
+        <span>Dashboard</span>
+      </a>
+      <a routerLink="/admin/users" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="nav-icon">👤</span>
+        <span>Users</span>
+      </a>
+      <a routerLink="/admin/roles" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="nav-icon">🛡️</span>
+        <span>Roles</span>
+      </a>
+      <a routerLink="/admin/categories" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="nav-icon">🏷️</span>
+        <span>Categories</span>
+      </a>
+      <a routerLink="/admin/products" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="nav-icon">📦</span>
+        <span>Products</span>
+      </a>
+      <a routerLink="/admin/inventory" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="nav-icon">🏢</span>
+        <span>Inventory</span>
+      </a>
+      <a routerLink="/admin/reviews" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="nav-icon">⚖️</span>
+        <span>Reviews</span>
+      </a>
+      <a routerLink="/admin/notifications" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="nav-icon">📢</span>
+        <span>Notifications</span>
+      </a>
+      <a routerLink="/admin/reports" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="nav-icon">📈</span>
+        <span>Reports</span>
+      </a>
+      <a routerLink="/catalog" (click)="closeSidebar()">
+        <span class="nav-icon">🏪</span>
+        <span>View Storefront</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="connection-status" [attr.data-state]="signalr.connectionState().toLowerCase()">
+        <span class="status-dot"></span>
+        <span class="status-text">{{ signalr.connectionState() }}</span>
+      </div>
+
+      <div class="profile-card" *ngIf="api.currentUser() as user">
+        <div class="profile-avatar">
+          {{ user.fullName.charAt(0).toUpperCase() }}
+        </div>
+        <div class="profile-info">
+          <div class="profile-name">{{ user.fullName }}</div>
+          <div class="profile-role">Portal Administrator</div>
+        </div>
+      </div>
+
+      <div class="footer-actions">
+        <button class="icon-btn theme-toggle" type="button" (click)="toggleTheme()" [title]="isDarkTheme() ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+          <span *ngIf="!isDarkTheme()">🌙</span>
+          <span *ngIf="isDarkTheme()">☀️</span>
+        </button>
+
+        <button class="ghost logout-btn" type="button" (click)="logout()">
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="sidebar-overlay" [class.active]="isSidebarOpen()" (click)="closeSidebar()"></div>
+
+  <div class="app-content-wrapper">
+    <header class="app-topbar">
+      <button class="hamburger-btn" type="button" (click)="toggleSidebar()" aria-label="Open navigation menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <div class="topbar-brand-mobile">
+        <span class="brand-mark">A</span>
+        <span>Admin Portal</span>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="icon-btn theme-toggle-mobile" type="button" (click)="toggleTheme()">
+          <span *ngIf="!isDarkTheme()">🌙</span>
+          <span *ngIf="isDarkTheme()">☀️</span>
+        </button>
+
+        <div class="connection-status-pill-mobile" [attr.data-state]="signalr.connectionState().toLowerCase()" [title]="'Real-time Connection: ' + signalr.connectionState()">
+          <span class="status-dot"></span>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- Breadcrumbs Component for administrative navigation trails -->
+      <app-breadcrumb></app-breadcrumb>
+      <router-outlet />
+    </main>
+  </div>
+</div>

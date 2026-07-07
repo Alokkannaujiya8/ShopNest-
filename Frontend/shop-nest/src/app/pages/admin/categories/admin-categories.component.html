@@ -1,0 +1,308 @@
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Administration</p>
+    <h1>Category Management</h1>
+  </div>
+  <div style="display: flex; gap: 0.75rem;">
+    <button class="ghost" (click)="viewMode = viewMode === 'table' ? 'tree' : 'table'">
+      Toggle {{ viewMode === 'table' ? 'Tree View' : 'Table View' }}
+    </button>
+    <button class="primary" (click)="openCreateModal()">
+      <span class="icon">+</span> New Category
+    </button>
+  </div>
+</section>
+
+<!-- Notices -->
+<p class="notice success" *ngIf="notice">{{ notice }}</p>
+<p class="notice error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+<!-- Filters Panel -->
+<section class="filters-panel panel">
+  <div class="filter-inputs">
+    <div class="search-box">
+      <input type="text" [(ngModel)]="search" placeholder="Search by name or slug..." (keyup.enter)="onSearch()" />
+      <button class="primary" (click)="onSearch()">Search</button>
+    </div>
+
+    <div class="select-box">
+      <label>Status</label>
+      <select [(ngModel)]="filterActive" (change)="onSearch()">
+        <option value="">All Statuses</option>
+        <option value="true">Active</option>
+        <option value="false">Inactive</option>
+      </select>
+    </div>
+
+    <div class="select-box">
+      <label>Featured</label>
+      <select [(ngModel)]="filterFeatured" (change)="onSearch()">
+        <option value="">All Featured</option>
+        <option value="true">Featured</option>
+        <option value="false">Not Featured</option>
+      </select>
+    </div>
+
+    <div class="select-box">
+      <label>Soft Deleted</label>
+      <select [(ngModel)]="filterDeleted" (change)="onSearch()">
+        <option value="false">Active Only</option>
+        <option value="true">Trash/Deleted Only</option>
+      </select>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================
+     TABLE VIEW
+     ========================================== -->
+<section class="panel table-panel" *ngIf="viewMode === 'table'">
+  <h2>Categories Grid ({{ totalCount }})</h2>
+
+  <div class="table-container">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th (click)="onSort('name')">Name <span class="sort-indicator">{{ sortBy === 'name' ? (descending ? '▼' : '▲') : '' }}</span></th>
+          <th>Slug</th>
+          <th>Parent Category</th>
+          <th (click)="onSort('displayorder')">Order <span class="sort-indicator">{{ sortBy === 'displayorder' ? (descending ? '▼' : '▲') : '' }}</span></th>
+          <th>Status</th>
+          <th>Featured</th>
+          <th class="actions-header">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let cat of categories">
+          <td>
+            <div class="img-preview-cell">
+              <img *ngIf="cat.imageUrl" [src]="cat.imageUrl" alt="icon" class="table-img" />
+              <span *ngIf="!cat.imageUrl" class="table-no-img">{{ cat.name.charAt(0) }}</span>
+            </div>
+          </td>
+          <td class="bold-text">{{ cat.name }}</td>
+          <td><span class="code-font">{{ cat.slug }}</span></td>
+          <td>{{ cat.parentName || 'None (Root)' }}</td>
+          <td>{{ cat.displayOrder }}</td>
+          <td>
+            <span class="status-badge" [class.active]="cat.isActive" [class.inactive]="!cat.isActive" (click)="toggleActivation(cat)">
+              {{ cat.isActive ? 'Active' : 'Inactive' }}
+            </span>
+            <span class="status-badge deleted" *ngIf="cat.isDeleted">Deleted</span>
+          </td>
+          <td>
+            <span class="status-badge featured" [class.active]="cat.isFeatured" [class.inactive]="!cat.isFeatured">
+              {{ cat.isFeatured ? 'Featured' : 'Standard' }}
+            </span>
+          </td>
+          <td class="actions compact">
+            <button class="ghost" (click)="openEditModal(cat)">Edit</button>
+            <button class="ghost" (click)="openUploadModal(cat, 'image')">Image</button>
+            <button class="ghost" (click)="openUploadModal(cat, 'banner')">Banner</button>
+            <button class="danger" *ngIf="!cat.isDeleted" (click)="deleteCategory(cat)">Delete</button>
+            <button class="ghost" style="color: var(--primary);" *ngIf="cat.isDeleted" (click)="restoreCategory(cat)">Restore</button>
+          </td>
+        </tr>
+        <tr *ngIf="!categories.length">
+          <td colspan="8" class="text-center muted-row">No categories found matching criteria.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-panel" *ngIf="totalPages > 1">
+    <button class="ghost" [disabled]="page === 1" (click)="changePage(page - 1)">Previous</button>
+    <span class="page-info">Page <strong>{{ page }}</strong> of <strong>{{ totalPages }}</strong></span>
+    <button class="ghost" [disabled]="page === totalPages" (click)="changePage(page + 1)">Next</button>
+  </div>
+</section>
+
+<!-- ==========================================
+     RECURSIVE TREE VIEW
+     ========================================== -->
+<section class="panel tree-panel" *ngIf="viewMode === 'tree'">
+  <h2>Recursive Category Tree</h2>
+  <div class="tree-root-container">
+    <div *ngFor="let node of treeNodes">
+      <ng-container *ngTemplateOutlet="nodeTemplate; context: { $implicit: node }"></ng-container>
+    </div>
+    <div class="muted-row text-center" *ngIf="!treeNodes.length">No active categories to display in tree view.</div>
+  </div>
+</section>
+
+<!-- Recursive Template -->
+<ng-template #nodeTemplate let-node>
+  <div class="tree-node">
+    <div class="node-info">
+      <div class="avatar-cell">
+        <img *ngIf="node.imageUrl" [src]="node.imageUrl" alt="icon" class="tree-img" />
+        <span *ngIf="!node.imageUrl" class="tree-no-img">{{ node.name.charAt(0) }}</span>
+      </div>
+      <div class="node-details">
+        <strong>{{ node.name }}</strong>
+        <span class="slug-info">/{{ node.slug }}</span>
+        <span class="status-badge" [class.active]="node.isActive" [class.inactive]="!node.isActive">{{ node.isActive ? 'Active' : 'Inactive' }}</span>
+      </div>
+    </div>
+    <div class="node-children" *ngIf="node.children && node.children.length">
+      <div *ngFor="let child of node.children">
+        <ng-container *ngTemplateOutlet="nodeTemplate; context: { $implicit: child }"></ng-container>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<!-- ==========================================
+     CREATE MODAL
+     ========================================== -->
+<div class="modal-backdrop" *ngIf="showCreateModal">
+  <div class="modal-panel scrolled">
+    <h2>Create New Category</h2>
+    <form (ngSubmit)="saveNewCategory()">
+      <div class="modal-columns">
+        <div class="modal-col">
+          <h3>Structural Properties</h3>
+          <label>Category Name *
+            <input type="text" [(ngModel)]="createForm.name" name="name" required />
+          </label>
+
+          <label>Parent Category (Hierarchy)
+            <select [(ngModel)]="createForm.parentId" name="parentId">
+              <option [ngValue]="null">None (Root Category)</option>
+              <option *ngFor="let p of parentList" [value]="p.id">{{ p.name }}</option>
+            </select>
+          </label>
+
+          <label>Display Order
+            <input type="number" [(ngModel)]="createForm.displayOrder" name="displayOrder" min="0" required />
+          </label>
+
+          <label class="check">
+            <input type="checkbox" [(ngModel)]="createForm.isFeatured" name="isFeatured" /> Mark as Featured Category
+          </label>
+
+          <label>Short Description (Banner Snippet)
+            <input type="text" [(ngModel)]="createForm.shortDescription" name="shortDescription" placeholder="Quick introductory sentence" />
+          </label>
+
+          <label>Description
+            <textarea [(ngModel)]="createForm.description" name="description" rows="3"></textarea>
+          </label>
+        </div>
+
+        <div class="modal-col">
+          <h3>SEO Meta tags</h3>
+          <label>SEO Title
+            <input type="text" [(ngModel)]="createForm.metaTitle" name="metaTitle" placeholder="Custom Browser Title" />
+          </label>
+
+          <label>Meta Description
+            <textarea [(ngModel)]="createForm.metaDescription" name="metaDescription" rows="2" placeholder="Search engines description..."></textarea>
+          </label>
+
+          <label>Meta Keywords
+            <input type="text" [(ngModel)]="createForm.metaKeywords" name="metaKeywords" placeholder="comma-separated tags..." />
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="primary" type="submit">Create Category</button>
+        <button class="ghost" type="button" (click)="showCreateModal = false">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ==========================================
+     EDIT MODAL
+     ========================================== -->
+<div class="modal-backdrop" *ngIf="showEditModal">
+  <div class="modal-panel scrolled">
+    <h2>Edit Category: {{ selectedCategory?.name }}</h2>
+    <form (ngSubmit)="saveUpdateCategory()">
+      <div class="modal-columns">
+        <div class="modal-col">
+          <h3>Structural Properties</h3>
+          <label>Category Name *
+            <input type="text" [(ngModel)]="updateForm.name" name="name" required />
+          </label>
+
+          <label>Parent Category (Hierarchy)
+            <select [(ngModel)]="updateForm.parentId" name="parentId">
+              <option [ngValue]="null">None (Root Category)</option>
+              <option *ngFor="let p of parentList" [value]="p.id">{{ p.name }}</option>
+            </select>
+          </label>
+
+          <label>Display Order
+            <input type="number" [(ngModel)]="updateForm.displayOrder" name="displayOrder" min="0" required />
+          </label>
+
+          <label class="check">
+            <input type="checkbox" [(ngModel)]="updateForm.isFeatured" name="isFeatured" /> Featured Category
+          </label>
+
+          <label class="check">
+            <input type="checkbox" [(ngModel)]="updateForm.isActive" name="isActive" /> Active status (visible to customers)
+          </label>
+
+          <label>Short Description
+            <input type="text" [(ngModel)]="updateForm.shortDescription" name="shortDescription" />
+          </label>
+
+          <label>Description
+            <textarea [(ngModel)]="updateForm.description" name="description" rows="3"></textarea>
+          </label>
+        </div>
+
+        <div class="modal-col">
+          <h3>SEO Meta tags</h3>
+          <label>SEO Title
+            <input type="text" [(ngModel)]="updateForm.metaTitle" name="metaTitle" />
+          </label>
+
+          <label>Meta Description
+            <textarea [(ngModel)]="updateForm.metaDescription" name="metaDescription" rows="2"></textarea>
+          </label>
+
+          <label>Meta Keywords
+            <input type="text" [(ngModel)]="updateForm.metaKeywords" name="metaKeywords" />
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="primary" type="submit">Save Changes</button>
+        <button class="ghost" type="button" (click)="showEditModal = false">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ==========================================
+     UPLOAD FILE MODAL
+     ========================================== -->
+<div class="modal-backdrop" *ngIf="showUploadModal">
+  <div class="modal-panel">
+    <h2>Upload {{ uploadType === 'image' ? 'Icon Image' : 'Banner Image' }}</h2>
+    <p class="muted" style="margin-bottom: 1.5rem;">Uploading to category: <strong>{{ selectedCategory?.name }}</strong></p>
+    
+    <form (ngSubmit)="uploadFile()">
+      <div class="file-uploader">
+        <input type="file" accept="image/*" (change)="onFileSelected($event)" required />
+      </div>
+
+      <div class="img-preview" *ngIf="selectedFile">
+        <p>Selected: {{ selectedFile.name }} ({{ selectedFile.size | number }} bytes)</p>
+      </div>
+
+      <div class="modal-actions" style="margin-top: 2rem;">
+        <button class="primary" type="submit" [disabled]="!selectedFile">Start Upload</button>
+        <button class="ghost" type="button" (click)="showUploadModal = false">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>

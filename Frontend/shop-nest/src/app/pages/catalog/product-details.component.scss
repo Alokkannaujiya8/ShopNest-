@@ -1,0 +1,149 @@
+.product-detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .product-detail-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.main-image-box {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.main-image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-image {
+  color: #888;
+  font-weight: bold;
+}
+
+.thumbnails-strip {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  overflow-x: auto;
+}
+
+.thumbnails-strip img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.thumbnails-strip img.active {
+  border-color: #0d47a1;
+  border-width: 2px;
+}
+
+.sku-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.75rem 0;
+}
+
+.sku-tag {
+  font-size: 0.85rem;
+  background-color: #eee;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  color: #555;
+}
+
+.price-box {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.price-tag {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #111;
+}
+
+.discount-badge {
+  background-color: #ffebee;
+  color: #c62828;
+  font-size: 0.85rem;
+  font-weight: bold;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+}
+
+.short-desc {
+  font-size: 1.1rem;
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.variants-selector-box {
+  background-color: #fcfcfc;
+  border: 1px solid #eee;
+  padding: 1.25rem;
+  border-radius: 6px;
+  margin-bottom: 2rem;
+}
+
+.selectors-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.cart-action-row {
+  margin-bottom: 2rem;
+}
+
+.cart-action-row button {
+  width: 100%;
+  max-width: 250px;
+  height: 48px;
+}
+
+.description-section {
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+}
+
+.description-text {
+  line-height: 1.7;
+  color: #444;
+  margin-top: 0.5rem;
+}
+
+.shipping-info {
+  margin-top: 1.5rem;
+  background-color: #fafafa;
+  padding: 1rem;
+  border-radius: 4px;
+}
+
+.shipping-info ul {
+  padding-left: 1.25rem;
+  margin-top: 0.25rem;
+}

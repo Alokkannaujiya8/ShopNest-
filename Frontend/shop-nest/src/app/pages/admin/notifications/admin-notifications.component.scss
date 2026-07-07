@@ -1,0 +1,13 @@
+// Standard SCSS
+.data-table {
+  th {
+    font-weight: 600;
+    color: #444;
+  }
+  td {
+    color: #333;
+  }
+  tr:hover {
+    background-color: #fafafa;
+  }
+}

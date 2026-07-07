@@ -1,0 +1,382 @@
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Administration</p>
+    <h1>Inventory & Stock Operations</h1>
+  </div>
+  <div style="display: flex; gap: 0.75rem;">
+    <button class="ghost" (click)="printReport()">
+      Print Report
+    </button>
+    <button class="primary" (click)="activeTab === 'history' ? exportTransactionsToCsv() : exportToCsv()">
+      Export CSV (Excel)
+    </button>
+  </div>
+</section>
+
+<!-- Stats Grid Widgets -->
+<section class="stats" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+  <article class="stat">
+    <span>Total Inventory Products</span>
+    <strong>{{ totalProducts }}</strong>
+  </article>
+  <article class="stat">
+    <span>Stock Valuation (Cost)</span>
+    <strong>${{ totalStockValue | number:'1.2-2' }}</strong>
+  </article>
+  <article class="stat" style="border-left: 4px solid #f57c00;">
+    <span>Low Stock Alerts</span>
+    <strong style="color: #ef6c00;">{{ lowStockCount }}</strong>
+  </article>
+  <article class="stat" style="border-left: 4px solid #d32f2f;">
+    <span>Out Of Stock</span>
+    <strong style="color: #c62828;">{{ outOfStockCount }}</strong>
+  </article>
+</section>
+
+<!-- Tabs Toggle Bar -->
+<div class="tabs-nav panel" style="padding: 0.5rem; display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+  <button class="ghost" [class.active-tab]="activeTab === 'list'" (click)="switchTab('list')">Stock Grid</button>
+  <button class="ghost" [class.active-tab]="activeTab === 'history'" (click)="switchTab('history')">Transaction History</button>
+  <button class="ghost" [class.active-tab]="activeTab === 'alerts'" (click)="switchTab('alerts')">Low Stock Report</button>
+</div>
+
+<!-- Notice Banners -->
+<p class="notice success" *ngIf="notice">{{ notice }}</p>
+<p class="notice error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+<!-- ==========================================
+     INVENTORY GRID VIEW
+     ========================================== -->
+<div *ngIf="activeTab === 'list' || activeTab === 'alerts'">
+  <!-- Filters Row -->
+  <section class="filters-panel panel">
+    <div class="filter-inputs">
+      <div class="search-box">
+        <input type="text" [(ngModel)]="search" placeholder="Search by name, SKU..." (keyup.enter)="onSearch()" />
+        <button class="primary" (click)="onSearch()">Search</button>
+      </div>
+
+      <div class="select-box">
+        <label>Warehouse</label>
+        <select [(ngModel)]="filterWarehouse" (change)="onSearch()">
+          <option value="">All Warehouses</option>
+          <option *ngFor="let wh of warehouses" [value]="wh.id">{{ wh.name }} ({{ wh.code }})</option>
+        </select>
+      </div>
+
+      <div class="select-box" *ngIf="activeTab === 'list'">
+        <label>Alert Status</label>
+        <select [(ngModel)]="filterStockStatus" (change)="onSearch()">
+          <option value="">All Stocks</option>
+          <option value="outofstock">Out of Stock Only</option>
+          <option value="lowstock">Low Stock Alerts Only</option>
+          <option value="overstock">Overstock Alerts Only</option>
+        </select>
+      </div>
+
+      <div>
+        <button class="ghost" style="margin-top: 1.5rem;" (click)="clearFilters()">Reset</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Data Grid -->
+  <section class="panel table-panel" style="margin-top: 1.5rem;">
+    <h2>Stock Items ({{ totalCount }})</h2>
+
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>SKU</th>
+            <th>Warehouse</th>
+            <th>Current Stock</th>
+            <th>Stock Breakdown (Avail / Res)</th>
+            <th>Alert Level</th>
+            <th>Rates (Cost / Retail)</th>
+            <th class="actions-header">Quick Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of inventoryItems">
+            <td class="bold-text">
+              <div>{{ item.productName }}</div>
+              <div *ngIf="item.productVariantName" style="font-size: 0.75rem; color: #555;">Variant: {{ item.productVariantName }}</div>
+            </td>
+            <td><span class="code-font">{{ item.sku }}</span></td>
+            <td>{{ item.warehouseName || 'WH-MAIN' }}</td>
+            <td class="bold-text" style="font-size: 1.1rem;">
+              {{ item.currentStock }}
+            </td>
+            <td>
+              <div class="stock-progress-container">
+                <div class="stock-bar">
+                  <div class="bar-fill avail" [style.width.%]="item.currentStock > 0 ? (item.availableStock / item.currentStock * 100) : 0"></div>
+                  <div class="bar-fill reserved" [style.width.%]="item.currentStock > 0 ? (item.reservedStock / item.currentStock * 100) : 0"></div>
+                </div>
+                <div class="stock-text-breakdown">
+                  <span style="color: #2e7d32; font-weight: bold;">{{ item.availableStock }} Avail</span> /
+                  <span style="color: #d32f2f;">{{ item.reservedStock }} Res</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="status-badge" 
+                    [class.active]="item.currentStock > item.minimumStockLevel && item.currentStock < item.maximumStockLevel"
+                    [class.inactive]="item.currentStock === 0"
+                    [class.deleted]="item.currentStock > 0 && item.currentStock <= item.minimumStockLevel"
+                    style="font-weight: bold;">
+                {{ item.currentStock == 0 ? 'Out of Stock' : (item.currentStock <= item.minimumStockLevel ? 'Low Stock' : (item.currentStock >= item.maximumStockLevel ? 'Overstock' : 'Normal')) }}
+              </span>
+            </td>
+            <td>
+              <div style="font-size: 0.8rem; color: #555;">Cost: ${{ item.unitCost | number:'1.2-2' }}</div>
+              <div style="font-weight: bold;">Retail: ${{ item.sellingPrice | number:'1.2-2' }}</div>
+            </td>
+            <td class="actions compact">
+              <button class="ghost" (click)="openStockIn(item)">+ In</button>
+              <button class="ghost" (click)="openStockOut(item)" [disabled]="item.availableStock === 0">- Out</button>
+              <button class="ghost" (click)="openAdjust(item)">Adjust</button>
+              <button class="ghost" (click)="openLimits(item)">Limits</button>
+            </td>
+          </tr>
+          <tr *ngIf="inventoryItems.length === 0">
+            <td colspan="8" style="text-align: center; padding: 2.5rem; color: #666;">
+              No inventory entries found matching criteria.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paging -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button class="ghost" [disabled]="page === 1" (click)="changePage(page - 1)">Previous</button>
+      <span class="pages-indicator">Page {{ page }} of {{ totalPages }}</span>
+      <button class="ghost" [disabled]="page === totalPages" (click)="changePage(page + 1)">Next</button>
+    </div>
+  </section>
+</div>
+
+<!-- ==========================================
+     TRANSACTION HISTORY VIEW
+     ========================================== -->
+<div *ngIf="activeTab === 'history'">
+  <section class="filters-panel panel">
+    <div class="filter-inputs">
+      <div class="search-box">
+        <input type="text" [(ngModel)]="txSearch" placeholder="Search by Tx #, Name, Reason..." (keyup.enter)="onTxSearch()" />
+        <button class="primary" (click)="onTxSearch()">Search</button>
+      </div>
+
+      <div class="select-box">
+        <label>Type</label>
+        <select [(ngModel)]="txType" (change)="onTxSearch()">
+          <option value="">All Transactions</option>
+          <option value="StockIn">Stock In</option>
+          <option value="StockOut">Stock Out</option>
+          <option value="Sale">Sale Checkout</option>
+          <option value="Return">Customer Return</option>
+          <option value="CancelledOrder">Order Cancelled</option>
+          <option value="ManualAdjustment">Manual Adjustment</option>
+        </select>
+      </div>
+
+      <div class="select-box">
+        <label>Start Date</label>
+        <input type="date" [(ngModel)]="txStartDate" (change)="onTxSearch()" />
+      </div>
+
+      <div class="select-box">
+        <label>End Date</label>
+        <input type="date" [(ngModel)]="txEndDate" (change)="onTxSearch()" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Transaction Timeline Table -->
+  <section class="panel table-panel" style="margin-top: 1.5rem;">
+    <h2>Stock Transaction Logs ({{ txTotalCount }})</h2>
+
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Tx Number</th>
+            <th>Date & Time</th>
+            <th>Product</th>
+            <th>SKU</th>
+            <th>Quantity</th>
+            <th>Previous → Updated Stock</th>
+            <th>Transaction Type</th>
+            <th>Reason</th>
+            <th>Performed By</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let tx of transactions">
+            <td><strong class="code-font" style="color: #0d47a1;">{{ tx.transactionNumber }}</strong></td>
+            <td>{{ tx.transactionDate | date:'medium' }}</td>
+            <td class="bold-text">
+              {{ tx.productName }}
+              <div *ngIf="tx.variantName" style="font-size: 0.75rem; color: #555;">{{ tx.variantName }}</div>
+            </td>
+            <td><span class="code-font">{{ tx.sku }}</span></td>
+            <td class="bold-text" [style.color]="tx.quantity > 0 ? '#2e7d32' : '#d32f2f'">
+              {{ tx.quantity > 0 ? '+' : '' }}{{ tx.quantity }}
+            </td>
+            <td>{{ tx.previousStock }} → {{ tx.updatedStock }}</td>
+            <td>
+              <span class="status-badge" 
+                    [class.active]="tx.transactionType === 'StockIn' || tx.transactionType === 'Return' || tx.transactionType === 'CancelledOrder'"
+                    [class.inactive]="tx.transactionType === 'StockOut' || tx.transactionType === 'Sale'"
+                    [class.deleted]="tx.transactionType === 'ManualAdjustment'"
+                    style="font-size: 0.8rem; font-weight: bold;">
+                {{ tx.transactionType }}
+              </span>
+            </td>
+            <td>{{ tx.reason }} <span *ngIf="tx.referenceNumber" style="font-size: 0.8rem; color: #555;">Ref: {{ tx.referenceNumber }}</span></td>
+            <td>{{ tx.performedBy }}</td>
+          </tr>
+          <tr *ngIf="transactions.length === 0">
+            <td colspan="9" style="text-align: center; padding: 2.5rem; color: #666;">
+              No stock transactions found matching filters.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paging -->
+    <div class="pagination" *ngIf="txTotalPages > 1">
+      <button class="ghost" [disabled]="txPage === 1" (click)="changeTxPage(txPage - 1)">Previous</button>
+      <span class="pages-indicator">Page {{ txPage }} of {{ txTotalPages }}</span>
+      <button class="ghost" [disabled]="txPage === txTotalPages" (click)="changeTxPage(txPage + 1)">Next</button>
+    </div>
+  </section>
+</div>
+
+<!-- ==========================================
+     OVERLAY MODALS (POPUP DIALOGS)
+     ========================================== -->
+
+<!-- 1. Stock In Modal -->
+<div class="modal-overlay" *ngIf="showStockInModal && selectedItem">
+  <div class="modal-card panel">
+    <h2>Restock / Stock In</h2>
+    <p>Product: <strong>{{ selectedItem.productName }}</strong></p>
+    <p>Current Stock: <strong>{{ selectedItem.currentStock }}</strong></p>
+
+    <div class="form-group" style="margin-top: 1rem;">
+      <label>Received Quantity <span class="required">*</span></label>
+      <input type="number" [(ngModel)]="stockInForm.quantity" min="1" required />
+    </div>
+
+    <div class="form-group">
+      <label>Purchase Unit Cost ($) <span class="required">*</span></label>
+      <input type="number" [(ngModel)]="stockInForm.unitCost" min="0" step="0.01" required />
+    </div>
+
+    <div class="form-group">
+      <label>Notes / Reason</label>
+      <input type="text" [(ngModel)]="stockInForm.reason" placeholder="e.g. Purchase order PO-998" />
+    </div>
+
+    <div class="form-group">
+      <label>Reference Number / Invoice</label>
+      <input type="text" [(ngModel)]="stockInForm.referenceNumber" placeholder="PO-12345" />
+    </div>
+
+    <div class="modal-actions" style="margin-top: 1.5rem;">
+      <button class="ghost" (click)="showStockInModal = false">Cancel</button>
+      <button class="primary" (click)="submitStockIn()">Verify & Restock</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Stock Out Modal -->
+<div class="modal-overlay" *ngIf="showStockOutModal && selectedItem">
+  <div class="modal-card panel">
+    <h2>Dispatch / Stock Out</h2>
+    <p>Product: <strong>{{ selectedItem.productName }}</strong></p>
+    <p>Available for Dispatch: <strong style="color: #2e7d32;">{{ selectedItem.availableStock }}</strong></p>
+
+    <div class="form-group" style="margin-top: 1rem;">
+      <label>Dispatch Quantity <span class="required">*</span></label>
+      <input type="number" [(ngModel)]="stockOutForm.quantity" min="1" [max]="selectedItem.availableStock" required />
+    </div>
+
+    <div class="form-group">
+      <label>Reason / Notes</label>
+      <input type="text" [(ngModel)]="stockOutForm.reason" placeholder="e.g. Damaged inventory write-off" />
+    </div>
+
+    <div class="form-group">
+      <label>Reference Number / Order</label>
+      <input type="text" [(ngModel)]="stockOutForm.referenceNumber" />
+    </div>
+
+    <div class="modal-actions" style="margin-top: 1.5rem;">
+      <button class="ghost" (click)="showStockOutModal = false">Cancel</button>
+      <button class="primary" style="background-color: #d32f2f;" (click)="submitStockOut()">Verify & Dispatch</button>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Stock Adjustment Modal -->
+<div class="modal-overlay" *ngIf="showAdjustModal && selectedItem">
+  <div class="modal-card panel">
+    <h2>Manual Stock Adjustment</h2>
+    <p>Product: <strong>{{ selectedItem.productName }}</strong></p>
+    <p>System Current Stock: <strong>{{ selectedItem.currentStock }}</strong></p>
+
+    <div class="form-group" style="margin-top: 1rem;">
+      <label>Physical Counted Quantity <span class="required">*</span></label>
+      <input type="number" [(ngModel)]="adjustForm.newQuantity" min="0" required />
+    </div>
+
+    <div class="form-group">
+      <label>Adjustment Reason <span class="required">*</span></label>
+      <input type="text" [(ngModel)]="adjustForm.reason" placeholder="e.g. Discrepancy during monthly audit" required />
+    </div>
+
+    <div class="form-group">
+      <label>Reference / Audit ID</label>
+      <input type="text" [(ngModel)]="adjustForm.referenceNumber" placeholder="AUD-2026" />
+    </div>
+
+    <div class="modal-actions" style="margin-top: 1.5rem;">
+      <button class="ghost" (click)="showAdjustModal = false">Cancel</button>
+      <button class="primary" (click)="submitAdjustment()">Save Adjustment</button>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Update Limits Modal -->
+<div class="modal-overlay" *ngIf="showLimitsModal && selectedItem">
+  <div class="modal-card panel">
+    <h2>Configure Stock Alert Thresholds</h2>
+    <p>Product: <strong>{{ selectedItem.productName }}</strong></p>
+
+    <div class="form-group" style="margin-top: 1rem;">
+      <label>Minimum Stock Level (Low Stock Warning)</label>
+      <input type="number" [(ngModel)]="limitsForm.minimumStockLevel" min="0" />
+    </div>
+
+    <div class="form-group">
+      <label>Maximum Stock Level (Overstock Warning)</label>
+      <input type="number" [(ngModel)]="limitsForm.maximumStockLevel" min="1" />
+    </div>
+
+    <div class="form-group">
+      <label>Reorder Trigger Level</label>
+      <input type="number" [(ngModel)]="limitsForm.reorderLevel" min="0" />
+    </div>
+
+    <div class="modal-actions" style="margin-top: 1.5rem;">
+      <button class="ghost" (click)="showLimitsModal = false">Cancel</button>
+      <button class="primary" (click)="submitLimits()">Save Limits</button>
+    </div>
+  </div>
+</div>

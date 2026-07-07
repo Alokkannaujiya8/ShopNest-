@@ -1,0 +1,211 @@
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Administration</p>
+    <h1>User Management</h1>
+  </div>
+  <button class="primary" (click)="openCreateModal()">
+    <span class="icon">+</span> New User
+  </button>
+</section>
+
+<!-- Alerts Feed -->
+<p class="notice success" *ngIf="notice">{{ notice }}</p>
+<p class="notice error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+<!-- Filters & Actions Panel -->
+<section class="filters-panel panel">
+  <div class="filter-inputs">
+    <div class="search-box">
+      <input type="text" [(ngModel)]="search" placeholder="Search by name, email or phone..." (keyup.enter)="onSearch()" />
+      <button class="primary" (click)="onSearch()">Search</button>
+    </div>
+    
+    <div class="select-box">
+      <label>Filter by Role</label>
+      <select [(ngModel)]="roleFilter" (change)="onSearch()">
+        <option value="">All Roles</option>
+        <option value="Admin">Admin</option>
+        <option value="Customer">Customer</option>
+        <option value="Seller">Seller</option>
+      </select>
+    </div>
+  </div>
+</section>
+
+<!-- Data Table -->
+<section class="panel table-panel">
+  <h2>Users List ({{ totalCount }})</h2>
+  
+  <div class="table-container">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th (click)="onSort('fullname')">Name <span class="sort-indicator">{{ sortBy === 'fullname' ? (descending ? '▼' : '▲') : '' }}</span></th>
+          <th (click)="onSort('email')">Email <span class="sort-indicator">{{ sortBy === 'email' ? (descending ? '▼' : '▲') : '' }}</span></th>
+          <th>Mobile</th>
+          <th (click)="onSort('role')">Role <span class="sort-indicator">{{ sortBy === 'role' ? (descending ? '▼' : '▲') : '' }}</span></th>
+          <th>Status</th>
+          <th>Email Verified</th>
+          <th>Last Login</th>
+          <th class="actions-header">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td class="bold-text">
+            <div class="avatar-cell">
+              <span class="avatar-stub">{{ user.fullName.charAt(0) }}</span>
+              {{ user.fullName }}
+            </div>
+          </td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.mobileNumber || 'N/A' }}</td>
+          <td>
+            <span class="role-badge" [class]="user.role.toLowerCase()">
+              {{ user.role }}
+            </span>
+          </td>
+          <td>
+            <span class="status-badge" [class.active]="user.isActive" [class.inactive]="!user.isActive" (click)="toggleActivation(user)">
+              {{ user.isActive ? 'Active' : 'Inactive' }}
+            </span>
+            <span class="status-badge locked" *ngIf="user.isLocked" (click)="toggleLock(user)">
+              Locked
+            </span>
+          </td>
+          <td>
+            <span class="status-badge" [class.verified]="user.emailVerified" [class.unverified]="!user.emailVerified">
+              {{ user.emailVerified ? 'Verified' : 'Pending' }}
+            </span>
+          </td>
+          <td>
+            <span class="small-text" *ngIf="user.lastLoginUtc">
+              {{ user.lastLoginUtc | date:'short' }} <br/>
+              <span class="muted">Count: {{ user.loginCount }}</span>
+            </span>
+            <span class="muted" *ngIf="!user.lastLoginUtc">Never</span>
+          </td>
+          <td class="actions compact">
+            <button class="ghost" (click)="openEditModal(user)">Edit</button>
+            <button class="ghost" [class.danger-text]="!user.isLocked" (click)="toggleLock(user)">
+              {{ user.isLocked ? 'Unlock' : 'Lock' }}
+            </button>
+            <button class="ghost" (click)="openResetPasswordModal(user)">Reset Pwd</button>
+            <button class="danger" (click)="deleteUser(user)">Delete</button>
+          </td>
+        </tr>
+        <tr *ngIf="!users.length">
+          <td colspan="8" class="text-center muted-row">No users found matching query.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-panel" *ngIf="totalPages > 1">
+    <button class="ghost" [disabled]="page === 1" (click)="changePage(page - 1)">Previous</button>
+    <span class="page-info">Page <strong>{{ page }}</strong> of <strong>{{ totalPages }}</strong></span>
+    <button class="ghost" [disabled]="page === totalPages" (click)="changePage(page + 1)">Next</button>
+  </div>
+</section>
+
+<!-- ==========================================
+     CREATE USER MODAL
+     ========================================== -->
+<div class="modal-backdrop" *ngIf="showCreateModal">
+  <div class="modal-panel">
+    <h2>Create New User</h2>
+    <form (ngSubmit)="saveNewUser()">
+      <label>Full Name
+        <input type="text" [(ngModel)]="createForm.fullName" name="fullName" required />
+      </label>
+      
+      <label>Email Address
+        <input type="email" [(ngModel)]="createForm.email" name="email" required />
+      </label>
+
+      <label>Mobile Number
+        <input type="text" [(ngModel)]="createForm.mobileNumber" name="mobileNumber" placeholder="+1XXXXXXXXXX" required />
+      </label>
+
+      <label>Temporary Password
+        <input type="password" [(ngModel)]="createForm.password" name="password" required />
+      </label>
+
+      <label>Assign Primary Role
+        <select [(ngModel)]="createForm.role" name="role" required>
+          <option value="Customer">Customer</option>
+          <option value="Admin">Admin</option>
+          <option value="Seller">Seller</option>
+        </select>
+      </label>
+
+      <div class="modal-actions">
+        <button class="primary" type="submit">Create User</button>
+        <button class="ghost" type="button" (click)="showCreateModal = false">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ==========================================
+     EDIT USER MODAL
+     ========================================== -->
+<div class="modal-backdrop" *ngIf="showEditModal">
+  <div class="modal-panel">
+    <h2>Edit User: {{ selectedUser?.fullName }}</h2>
+    <form (ngSubmit)="saveUpdateUser()">
+      <label>Full Name
+        <input type="text" [(ngModel)]="updateForm.fullName" name="fullName" required />
+      </label>
+
+      <label>Mobile Number
+        <input type="text" [(ngModel)]="updateForm.mobileNumber" name="mobileNumber" required />
+      </label>
+
+      <label>Primary Role
+        <select [(ngModel)]="updateForm.role" name="role" required>
+          <option value="Customer">Customer</option>
+          <option value="Admin">Admin</option>
+          <option value="Seller">Seller</option>
+        </select>
+      </label>
+
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="updateForm.isActive" name="isActive" /> Active Status
+      </label>
+
+      <div class="modal-actions">
+        <button class="primary" type="submit">Save Changes</button>
+        <button class="ghost" type="button" (click)="showEditModal = false">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ==========================================
+     RESET PASSWORD MODAL
+     ========================================== -->
+<div class="modal-backdrop" *ngIf="showResetPasswordModal">
+  <div class="modal-panel">
+    <h2>Reset Password: {{ selectedUser?.fullName }}</h2>
+    <form (ngSubmit)="resetPassword()">
+      <label>New Password
+        <input type="password" [(ngModel)]="resetPasswordForm.newPassword" name="newPassword" required />
+      </label>
+
+      <label>Confirm Password
+        <input type="password" [(ngModel)]="resetPasswordForm.confirmPassword" name="confirmPassword" required />
+      </label>
+
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="resetPasswordForm.forcePasswordChange" name="forcePasswordChange" /> Force password change on next login
+      </label>
+
+      <div class="modal-actions">
+        <button class="primary" type="submit">Reset Password</button>
+        <button class="ghost" type="button" (click)="showResetPasswordModal = false">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>

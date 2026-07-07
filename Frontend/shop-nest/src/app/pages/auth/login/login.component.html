@@ -1,0 +1,76 @@
+<section class="auth-shell">
+  <form class="panel auth-panel" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <div class="auth-header">
+      <p class="eyebrow">ShopNest Portal</p>
+      <h1>Sign In</h1>
+      <p class="auth-subtitle">Access your account dashboard</p>
+    </div>
+
+    <!-- Email Field -->
+    <label class="form-field">
+      <span>Email Address</span>
+      <input 
+        type="email" 
+        formControlName="email" 
+        placeholder="name@example.com"
+        [class.invalid]="loginForm.controls.email.touched && loginForm.controls.email.invalid"
+      />
+      <span class="error" *ngIf="loginForm.controls.email.touched && loginForm.controls.email.errors?.['required']">
+        Email is required.
+      </span>
+      <span class="error" *ngIf="loginForm.controls.email.touched && loginForm.controls.email.errors?.['email']">
+        Please enter a valid email.
+      </span>
+    </label>
+
+    <!-- Password Field -->
+    <label class="form-field">
+      <span>Password</span>
+      <div class="password-input-wrapper">
+        <input 
+          [type]="showPassword() ? 'text' : 'password'" 
+          formControlName="password" 
+          placeholder="••••••••"
+          [class.invalid]="loginForm.controls.password.touched && loginForm.controls.password.invalid"
+        />
+        <button 
+          type="button" 
+          class="password-toggle-btn"
+          (click)="togglePasswordVisibility()"
+          [title]="showPassword() ? 'Hide Password' : 'Show Password'"
+        >
+          <span>{{ showPassword() ? '👁️' : '🔒' }}</span>
+        </button>
+      </div>
+      <span class="error" *ngIf="loginForm.controls.password.touched && loginForm.controls.password.errors?.['required']">
+        Password is required.
+      </span>
+      <span class="error" *ngIf="loginForm.controls.password.touched && loginForm.controls.password.errors?.['minlength']">
+        Password must be at least 8 characters.
+      </span>
+    </label>
+
+    <!-- Login Options -->
+    <div class="login-options">
+      <label class="checkbox-container">
+        <input type="checkbox" formControlName="rememberMe" />
+        <span class="checkmark"></span>
+        Remember Me
+      </label>
+      <a routerLink="/auth/forgot-password" class="forgot-link">
+        Forgot password?
+      </a>
+    </div>
+
+    <!-- Submit Button -->
+    <button class="primary" type="submit" [disabled]="loading() || loginForm.invalid">
+      <span *ngIf="loading()">Authenticating...</span>
+      <span *ngIf="!loading()">Continue</span>
+    </button>
+
+    <div class="auth-switch">
+      <span>Don't have an account? </span>
+      <a routerLink="/auth/register">Sign Up</a>
+    </div>
+  </form>
+</section>

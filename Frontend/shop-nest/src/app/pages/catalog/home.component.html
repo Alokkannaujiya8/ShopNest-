@@ -1,0 +1,187 @@
+<section class="home-container">
+  <!-- Hero Banner Carousel -->
+  <div class="hero-carousel">
+    <div 
+      *ngFor="let slide of heroSlides; let i = index" 
+      class="hero-slide" 
+      [class.active]="currentSlide() === i"
+      [style.backgroundImage]="'linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.2)), url(' + slide.image + ')'"
+    >
+      <div class="hero-content">
+        <h1>{{ slide.title }}</h1>
+        <p>{{ slide.subtitle }}</p>
+        <div class="hero-actions">
+          <a routerLink="/catalog" class="primary button-cta">Shop Now</a>
+          <a href="#categories" class="outline button-cta">Browse Categories</a>
+        </div>
+      </div>
+    </div>
+    
+    <button class="carousel-control prev" (click)="prevSlide()" aria-label="Previous Slide">‹</button>
+    <button class="carousel-control next" (click)="nextSlide()" aria-label="Next Slide">›</button>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading()">
+    <div class="skeleton-banner"></div>
+    <div class="catalog-grid">
+      <div class="skeleton-card" *ngFor="let item of [1, 2, 3, 4]"></div>
+    </div>
+  </div>
+
+  <!-- Error / Offline State -->
+  <div class="error-state" *ngIf="!loading() && error()">
+    <p>We encountered a connection issue while fetching the catalog.</p>
+    <button class="primary" (click)="loadHomeData()">Try Again</button>
+  </div>
+
+  <ng-container *ngIf="!loading() && !error()">
+    <!-- Featured Categories Section -->
+    <section id="categories" class="categories-section">
+      <div class="section-header">
+        <h2>Shop by Category</h2>
+        <p>Explore our premium curated category collections</p>
+      </div>
+      <div class="categories-grid">
+        <a 
+          *ngFor="let cat of categories()" 
+          [routerLink]="['/catalog']" 
+          [queryParams]="{ categoryId: cat.id }"
+          class="category-card"
+        >
+          <div class="category-icon">📁</div>
+          <h3>{{ cat.name }}</h3>
+          <span class="explore-link">Explore Collection →</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Featured Products Section -->
+    <section class="products-section">
+      <div class="section-header">
+        <h2>Featured Products</h2>
+        <p>Handpicked essentials curated just for you</p>
+      </div>
+      
+      <div class="catalog-grid" *ngIf="featuredProducts().length > 0; else noFeatured">
+        <!-- Reusable Product Card -->
+        <div *ngFor="let p of featuredProducts()" class="product-card" [routerLink]="['/catalog/product', p.slug]">
+          <div class="product-image-wrapper">
+            <img 
+              [src]="p.images[0]?.url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80'" 
+              [alt]="p.name" 
+              loading="lazy"
+            />
+            <div class="badge discount" *ngIf="p.discountValue > 0">
+              -{{ p.discountValue }}{{ p.discountType === 'Percentage' ? '%' : ' OFF' }}
+            </div>
+          </div>
+          
+          <div class="product-details">
+            <span class="product-brand" *ngIf="p.brandName">{{ p.brandName }}</span>
+            <h3 class="product-title">{{ p.name }}</h3>
+            
+            <div class="product-rating">
+              <span class="stars">★ {{ p.averageRating | number:'1.1-1' }}</span>
+              <span class="count">({{ p.reviewsCount }})</span>
+            </div>
+
+            <div class="product-price-row">
+              <div class="price-container">
+                <span class="current-price">{{ p.price | currency }}</span>
+                <span class="original-price" *ngIf="p.discountValue > 0">{{ p.price + p.discountValue | currency }}</span>
+              </div>
+              <button 
+                class="cart-add-btn" 
+                type="button" 
+                (click)="addToCart(p, $event)"
+                aria-label="Add to cart"
+              >
+                ＋
+              </button>
+            </div>
+
+            <button 
+              class="wishlist-btn" 
+              type="button" 
+              (click)="toggleWishlist(p, $event)"
+              aria-label="Add to wishlist"
+            >
+              ❤️
+            </button>
+          </div>
+        </div>
+      </div>
+      <ng-template #noFeatured>
+        <div class="empty-state">No featured items found.</div>
+      </ng-template>
+    </section>
+
+    <!-- Brands Carousel Section -->
+    <section class="brands-section">
+      <div class="section-header">
+        <h2>Curated Brands</h2>
+        <p>We partner with industry-leading manufacturers</p>
+      </div>
+      <div class="brands-grid">
+        <div class="brand-card" *ngFor="let b of brands">
+          <span class="brand-logo">{{ b.logo }}</span>
+          <h4>{{ b.name }}</h4>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section">
+      <div class="section-header">
+        <h2>What Our Customers Say</h2>
+        <p>Read review testimonials from verified buyers</p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card" *ngFor="let t of testimonials">
+          <div class="stars">★★★★★</div>
+          <p class="feedback">"{{ t.feedback }}"</p>
+          <span class="name">- {{ t.name }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQs Section -->
+    <section class="faq-section">
+      <div class="section-header">
+        <h2>Frequently Asked Questions</h2>
+        <p>Find quick answers to common queries</p>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item" *ngFor="let f of faqs; let i = index">
+          <button class="faq-trigger" (click)="toggleFaq(i)" aria-expanded="false">
+            <span>{{ f.question }}</span>
+            <span class="faq-icon">{{ f.open() ? '−' : '＋' }}</span>
+          </button>
+          <div class="faq-panel" [class.open]="f.open()">
+            <p>{{ f.answer }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Newsletter Subscription Section -->
+    <section class="newsletter-section">
+      <div class="newsletter-panel">
+        <h2>Join Our Newsletter</h2>
+        <p>Subscribe to receive product arrivals alerts, flash sale announcements, and special promo coupons.</p>
+        <div class="newsletter-form">
+          <input 
+            type="email" 
+            [value]="newsletterEmail()" 
+            (input)="newsletterEmail.set(emailInput.value)"
+            #emailInput
+            placeholder="Enter your email address" 
+            aria-label="Newsletter email address"
+          />
+          <button class="primary" (click)="subscribeNewsletter()">Subscribe</button>
+        </div>
+      </div>
+    </section>
+  </ng-container>
+</section>

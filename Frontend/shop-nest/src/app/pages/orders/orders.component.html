@@ -1,42 +1,494 @@
-<section class="page-head">
-  <div>
-    <p class="eyebrow">Orders</p>
-    <h1>Tracking</h1>
+<div class="wishlist-page-container" style="max-width: 1300px; margin: 0 auto; padding: 2rem;">
+
+  <!-- Page Head -->
+  <section class="page-head" style="margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <p class="eyebrow" style="text-transform: uppercase; color: #888; letter-spacing: 1px; font-size: 0.8rem; margin: 0;">ShopNest Dashboard</p>
+      <h1 style="margin: 0.25rem 0 0 0; font-size: 2.2rem; color: #222;">Order Management & Tracking</h1>
+    </div>
+
+    <!-- Tab Switching for Admins -->
+    <div *ngIf="isAdmin" class="tab-buttons" style="display: flex; gap: 0.5rem; background: #f0f0f0; padding: 0.25rem; border-radius: 6px;">
+      <button 
+        style="border: none; padding: 0.5rem 1.25rem; border-radius: 4px; font-weight: 600; cursor: pointer;"
+        [style.background]="activeTab === 'my' ? '#fff' : 'transparent'"
+        [style.boxShadow]="activeTab === 'my' ? '0 2px 4px rgba(0,0,0,0.08)' : 'none'"
+        (click)="switchTab('my')">
+        My Orders
+      </button>
+      <button 
+        style="border: none; padding: 0.5rem 1.25rem; border-radius: 4px; font-weight: 600; cursor: pointer;"
+        [style.background]="activeTab === 'admin' ? '#fff' : 'transparent'"
+        [style.boxShadow]="activeTab === 'admin' ? '0 2px 4px rgba(0,0,0,0.08)' : 'none'"
+        (click)="switchTab('admin')">
+        Admin Console
+      </button>
+    </div>
+  </section>
+
+  <!-- Alerts -->
+  <p class="notice success" *ngIf="notice">{{ notice }}</p>
+  <p class="notice error" *ngIf="errorMsg">{{ errorMsg }}</p>
+  <p class="notice" *ngIf="paymentMessage">{{ paymentMessage }}</p>
+
+  <!-- Sandbox Simulator -->
+  <div class="panel actions" *ngIf="activeSession" style="margin-bottom: 1.5rem; padding: 1rem; border-left: 4px solid #1976d2; display: flex; align-items: center; justify-content: space-between; background: #e3f2fd; border-radius: 6px;">
+    <div>
+      <strong style="color: #0d47a1;">Sandbox Payment Simulator:</strong>
+      <span style="font-size: 0.9rem; margin-left: 0.5rem;">Session ready for order #{{ activeSession.orderNumber }}</span>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+      <button class="primary small" type="button" (click)="simulateSuccess()">Simulate Success</button>
+      <button class="danger small" type="button" (click)="simulateFailure()">Simulate Failure</button>
+    </div>
   </div>
-</section>
 
-<p class="notice" *ngIf="paymentMessage">{{ paymentMessage }}</p>
+  <!-- Master-Detail Dashboard -->
+  <div class="dashboard-grid" style="display: grid; grid-template-columns: 420px 1fr; gap: 2rem; align-items: start;">
 
-<div class="panel actions" *ngIf="activeSession" style="margin-bottom: 1.5rem; padding: 0.8rem 1rem; justify-content: flex-start; gap: 1rem;">
-  <strong>Sandbox Payment Simulator:</strong>
-  <button class="primary small" type="button" (click)="simulateSuccess()">Simulate Success</button>
-  <button class="danger small" type="button" (click)="simulateFailure()">Simulate Failure</button>
+    <!-- Left Side: Order List -->
+    <div class="order-list-pane" style="display: flex; flex-direction: column; gap: 1rem;">
+      
+      <!-- Filters and Search -->
+      <div class="panel" style="padding: 1.25rem; border-radius: 8px;">
+        <h4 style="margin: 0 0 1rem 0;">Search & Filter</h4>
+        
+        <input 
+          type="text" 
+          placeholder="Search by order #, address..." 
+          [(ngModel)]="searchQuery" 
+          (input)="loadOrders()" 
+          style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 0.75rem; font-size: 0.9rem;" />
+
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+          <select 
+            [(ngModel)]="statusFilter" 
+            (change)="loadOrders()" 
+            style="flex-grow: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.85rem;">
+            <option value="">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Processing">Processing</option>
+            <option value="Packed">Packed</option>
+            <option value="ReadyToShip">Ready To Ship</option>
+            <option value="Shipped">Shipped</option>
+            <option value="OutForDelivery">Out For Delivery</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Cancelled">Cancelled</option>
+            <option value="ReturnRequested">Return Requested</option>
+            <option value="Returned">Returned</option>
+            <option value="RefundRequested">Refund Requested</option>
+            <option value="Refunded">Refunded</option>
+          </select>
+
+          <select 
+            [(ngModel)]="paymentStatusFilter" 
+            (change)="loadOrders()" 
+            style="flex-grow: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.85rem;">
+            <option value="">All Payments</option>
+            <option value="Pending">Pending</option>
+            <option value="Succeeded">Succeeded</option>
+            <option value="Failed">Failed</option>
+            <option value="Refunded">Refunded</option>
+          </select>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #666;">
+          <span>Showing {{ totalItems }} entries</span>
+          <a style="cursor: pointer; text-decoration: underline; color: #1976d2;" (click)="searchQuery = ''; statusFilter = ''; paymentStatusFilter = ''; loadOrders();">Reset</a>
+        </div>
+      </div>
+
+      <!-- Orders Feed -->
+      <div style="max-height: 600px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;">
+        <article 
+          class="panel" 
+          *ngFor="let order of (activeTab === 'my' ? myOrdersList : adminOrdersList)"
+          (click)="selectOrder(order)"
+          [style.borderColor]="selectedOrder?.id === order.id ? '#1976d2' : '#ddd'"
+          [style.boxShadow]="selectedOrder?.id === order.id ? '0 4px 12px rgba(25,118,210,0.12)' : 'none'"
+          style="padding: 1.25rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; border-left: 4px solid #ddd;">
+          
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+            <div>
+              <strong style="font-size: 1.05rem; color: #111;">{{ order.orderNumber }}</strong>
+              <p style="margin: 0.2rem 0 0 0; font-size: 0.8rem; color: #666;">
+                {{ order.items.length }} {{ order.items.length === 1 ? 'item' : 'items' }}
+              </p>
+            </div>
+            <span class="status-pill" [attr.data-status]="order.status" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; font-weight: bold; text-transform: uppercase;">
+              {{ order.status }}
+            </span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; border-top: 1px solid #f0f0f0; padding-top: 0.5rem;">
+            <span style="font-size: 0.85rem; color: #555;">Total Amount:</span>
+            <strong style="color: #2e7d32; font-size: 1.1rem;">{{ order.totalAmount | currency:'USD' }}</strong>
+          </div>
+
+        </article>
+        
+        <p class="muted" *ngIf="activeTab === 'my' ? !myOrdersList.length : !adminOrdersList.length" style="text-align: center; padding: 3rem 0; color: #999;">
+          No orders match filters.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Right Side: Order Details & Real-Time Tracking -->
+    <div class="order-details-pane">
+      
+      <!-- Placeholder when none selected -->
+      <div class="panel" *ngIf="!selectedOrder" style="padding: 5rem 2rem; text-align: center; border-radius: 8px;">
+        <span style="font-size: 4rem; color: #ccc;">📦</span>
+        <h3 style="margin-top: 1.5rem; color: #444;">Select an Order to Track</h3>
+        <p style="color: #777; font-size: 0.95rem; max-width: 320px; margin: 0.5rem auto 0 auto;">
+          Click on any order card from the list to view its real-time delivery status, tracking details, and downloads.
+        </p>
+      </div>
+
+      <div *ngIf="selectedOrder" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- Header Panel -->
+        <div class="panel" style="padding: 1.5rem; border-radius: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: start; border-bottom: 1px solid #eee; padding-bottom: 1rem; margin-bottom: 1rem;">
+            <div>
+              <h3 style="margin: 0; color: #222; font-size: 1.3rem;">Order Details</h3>
+              <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.85rem;">
+                Reference ID: <span class="code-font" style="font-family: monospace;">{{ selectedOrder.id }}</span>
+              </p>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem;">
+              <span class="status-pill" [attr.data-status]="selectedOrder.status" style="font-size: 0.85rem; padding: 0.3rem 0.8rem; border-radius: 12px; font-weight: bold; text-transform: uppercase;">
+                {{ selectedOrder.status }}
+              </span>
+              <span style="font-size: 0.8rem; color: #666;" *ngIf="selectedOrder.payment">
+                Payment: <strong>{{ selectedOrder.payment.status }}</strong> ({{ selectedOrder.payment.provider }})
+              </span>
+            </div>
+          </div>
+
+          <!-- Metadata Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; font-size: 0.95rem;">
+            <div>
+              <p style="margin: 0 0 0.5rem 0; color: #666; font-size: 0.85rem; text-transform: uppercase;">Shipping Destination</p>
+              <div style="white-space: pre-line; line-height: 1.4; color: #333; background: #fafafa; padding: 0.75rem; border-radius: 6px; border: 1px solid #eee;">
+                {{ selectedOrder.shippingAddress }}
+              </div>
+            </div>
+            <div>
+              <p style="margin: 0 0 0.5rem 0; color: #666; font-size: 0.85rem; text-transform: uppercase;">Delivery Information</p>
+              <div style="line-height: 1.6; color: #333; background: #fafafa; padding: 0.75rem; border-radius: 6px; border: 1px solid #eee;">
+                <div>Courier: <strong>{{ selectedOrder.courierPartner || 'Not Dispatched Yet' }}</strong></div>
+                <div>Tracking #: <strong>{{ selectedOrder.trackingNumber || 'N/A' }}</strong></div>
+                <div style="margin-top: 0.5rem; border-top: 1px solid #eef0f2; padding-top: 0.5rem;">
+                  Est. Delivery: <strong style="color: #0d47a1;">{{ selectedOrder.estimatedDeliveryDate ? (selectedOrder.estimatedDeliveryDate | date:'mediumDate') : 'Pending Dispatch' }}</strong>
+                </div>
+                <div *ngIf="selectedOrder.deliveredDate">
+                  Delivered: <strong style="color: #2e7d32;">{{ selectedOrder.deliveredDate | date:'medium' }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tracking Progress Bar -->
+        <div class="panel" style="padding: 1.5rem; border-radius: 8px;">
+          <h4 style="margin: 0 0 1.5rem 0; color: #333;">Live Shipment Progress</h4>
+          
+          <div class="progress-bar-container" style="display: flex; justify-content: space-between; position: relative; margin: 1rem 0;">
+            <!-- Background Line -->
+            <div style="position: absolute; top: 12px; left: 0; right: 0; height: 4px; background: #ddd; z-index: 1;"></div>
+            
+            <!-- Nodes -->
+            <div class="progress-step" style="z-index: 2; text-align: center; flex: 1;">
+              <div class="circle" [style.background]="['Pending', 'Confirmed', 'Processing', 'Packed', 'ReadyToShip', 'Shipped', 'OutForDelivery', 'Delivered'].includes(selectedOrder.status) ? '#1976d2' : '#ccc'" style="width: 26px; height: 26px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 0.7rem; font-weight: bold;">
+                1
+              </div>
+              <span style="font-size: 0.75rem; display: block; margin-top: 0.5rem; font-weight: 600;">Placed</span>
+            </div>
+
+            <div class="progress-step" style="z-index: 2; text-align: center; flex: 1;">
+              <div class="circle" [style.background]="['Confirmed', 'Processing', 'Packed', 'ReadyToShip', 'Shipped', 'OutForDelivery', 'Delivered'].includes(selectedOrder.status) ? '#1976d2' : '#ccc'" style="width: 26px; height: 26px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 0.7rem; font-weight: bold;">
+                2
+              </div>
+              <span style="font-size: 0.75rem; display: block; margin-top: 0.5rem; font-weight: 600;">Confirmed</span>
+            </div>
+
+            <div class="progress-step" style="z-index: 2; text-align: center; flex: 1;">
+              <div class="circle" [style.background]="['Processing', 'Packed', 'ReadyToShip', 'Shipped', 'OutForDelivery', 'Delivered'].includes(selectedOrder.status) ? '#1976d2' : '#ccc'" style="width: 26px; height: 26px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 0.7rem; font-weight: bold;">
+                3
+              </div>
+              <span style="font-size: 0.75rem; display: block; margin-top: 0.5rem; font-weight: 600;">Processing</span>
+            </div>
+
+            <div class="progress-step" style="z-index: 2; text-align: center; flex: 1;">
+              <div class="circle" [style.background]="['Packed', 'ReadyToShip', 'Shipped', 'OutForDelivery', 'Delivered'].includes(selectedOrder.status) ? '#1976d2' : '#ccc'" style="width: 26px; height: 26px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 0.7rem; font-weight: bold;">
+                4
+              </div>
+              <span style="font-size: 0.75rem; display: block; margin-top: 0.5rem; font-weight: 600;">Packed</span>
+            </div>
+
+            <div class="progress-step" style="z-index: 2; text-align: center; flex: 1;">
+              <div class="circle" [style.background]="['Shipped', 'OutForDelivery', 'Delivered'].includes(selectedOrder.status) ? '#1976d2' : '#ccc'" style="width: 26px; height: 26px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 0.7rem; font-weight: bold;">
+                5
+              </div>
+              <span style="font-size: 0.75rem; display: block; margin-top: 0.5rem; font-weight: 600;">Shipped</span>
+            </div>
+
+            <div class="progress-step" style="z-index: 2; text-align: center; flex: 1;">
+              <div class="circle" [style.background]="selectedOrder.status === 'Delivered' ? '#2e7d32' : '#ccc'" style="width: 26px; height: 26px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 0.7rem; font-weight: bold;">
+                ✓
+              </div>
+              <span style="font-size: 0.75rem; display: block; margin-top: 0.5rem; font-weight: 600;">Delivered</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline Updates & Details Panel -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+          
+          <!-- History Log Timeline -->
+          <div class="panel" style="padding: 1.5rem; border-radius: 8px;">
+            <h4 style="margin: 0 0 1rem 0; color: #333;">Order Timeline History</h4>
+            <div style="display: flex; flex-direction: column; gap: 1rem; border-left: 2px solid #eee; padding-left: 1rem; margin-left: 0.5rem;">
+              <div *ngFor="let entry of timeline" style="position: relative;">
+                <!-- Dot icon -->
+                <div style="position: absolute; left: -1.4rem; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: #1976d2;"></div>
+                <strong style="font-size: 0.85rem; display: block; color: #222;">{{ entry.status }}</strong>
+                <span style="font-size: 0.8rem; color: #666; display: block; margin-top: 0.1rem;">{{ entry.note }}</span>
+                <span style="font-size: 0.7rem; color: #999;">{{ entry.createdAtUtc | date:'short' }} (by {{ entry.changedBy }})</span>
+              </div>
+              <p class="muted" *ngIf="!timeline.length" style="font-size: 0.85rem; color: #999;">No timeline log entries.</p>
+            </div>
+          </div>
+
+          <!-- Live Courier Transit Location Log -->
+          <div class="panel" style="padding: 1.5rem; border-radius: 8px;">
+            <h4 style="margin: 0 0 1rem 0; color: #333;">Courier Delivery Tracking Log</h4>
+            <div style="display: flex; flex-direction: column; gap: 1rem; border-left: 2px solid #eee; padding-left: 1rem; margin-left: 0.5rem;">
+              <div *ngFor="let tr of trackingHistory" style="position: relative;">
+                <div style="position: absolute; left: -1.4rem; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: #2e7d32;"></div>
+                <strong style="font-size: 0.85rem; display: block; color: #222;">{{ tr.status }}</strong>
+                <span style="font-size: 0.8rem; color: #555; display: block;">Location: {{ tr.location }}</span>
+                <span style="font-size: 0.7rem; color: #999;">{{ tr.createdAtUtc | date:'short' }}</span>
+              </div>
+              <p class="muted" *ngIf="!trackingHistory.length" style="font-size: 0.85rem; color: #999;">Awaiting shipment courier tracking updates.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Items & Billing Calculation -->
+        <div class="panel" style="padding: 1.5rem; border-radius: 8px;">
+          <h4 style="margin: 0 0 1rem 0; color: #333;">Items Summary</h4>
+          
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 1.5rem;">
+            <thead>
+              <tr style="border-bottom: 2px solid #eee; text-align: left; color: #666; font-size: 0.8rem; text-transform: uppercase;">
+                <th style="padding: 0.5rem 0;">Product Description</th>
+                <th style="padding: 0.5rem 0; text-align: center;">SKU</th>
+                <th style="padding: 0.5rem 0; text-align: center;">Quantity</th>
+                <th style="padding: 0.5rem 0; text-align: right;">Unit Price</th>
+                <th style="padding: 0.5rem 0; text-align: right;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of selectedOrder.items" style="border-bottom: 1px solid #f4f4f4;">
+                <td style="padding: 0.75rem 0; font-weight: 500; color: #333;">{{ item.productName }}</td>
+                <td style="padding: 0.75rem 0; text-align: center; color: #666; font-family: monospace;">{{ item.sku || 'N/A' }}</td>
+                <td style="padding: 0.75rem 0; text-align: center;">{{ item.quantity }}</td>
+                <td style="padding: 0.75rem 0; text-align: right;">{{ item.unitPrice | currency:'USD' }}</td>
+                <td style="padding: 0.75rem 0; text-align: right; font-weight: 600;">{{ item.lineTotal | currency:'USD' }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="display: flex; justify-content: flex-end;">
+            <div style="width: 320px; font-size: 0.9rem; line-height: 1.8;">
+              <div style="display: flex; justify-content: space-between;">
+                <span>Shipping Cost:</span>
+                <span>{{ (selectedOrder.shippingCost || 0) | currency:'USD' }}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>Taxes (10%):</span>
+                <span>{{ (selectedOrder.tax || 0) | currency:'USD' }}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;" *ngIf="selectedOrder.discount">
+                <span>Coupon Discount:</span>
+                <span style="color: #c62828;">-{{ (selectedOrder.discount || 0) | currency:'USD' }}</span>
+              </div>
+              <hr style="border: 0; border-top: 1px solid #eee; margin: 0.5rem 0;" />
+              <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: bold; color: #111;">
+                <span>Grand Total:</span>
+                <span style="color: #2e7d32;">{{ selectedOrder.totalAmount | currency:'USD' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Action Controls -->
+        <div class="panel" style="padding: 1.25rem; border-radius: 8px; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          
+          <!-- Customer operations -->
+          <button class="primary" style="padding: 0.5rem 1.25rem;" (click)="buyAgain(selectedOrder)">
+            Buy Items Again
+          </button>
+          
+          <button class="ghost" style="padding: 0.5rem 1.25rem;" *ngIf="['Pending', 'Confirmed'].includes(selectedOrder.status)" (click)="openCancel()">
+            Cancel Order
+          </button>
+
+          <button class="ghost" style="padding: 0.5rem 1.25rem;" *ngIf="selectedOrder.status === 'Delivered'" (click)="openReturn()">
+            Request Return
+          </button>
+
+          <button class="ghost" style="padding: 0.5rem 1.25rem;" *ngIf="selectedOrder.status === 'Delivered'" (click)="openRefund()">
+            Request Refund
+          </button>
+
+          <button class="ghost" style="padding: 0.5rem 1.25rem;" (click)="downloadInvoiceFile(selectedOrder)">
+            Download Invoice PDF
+          </button>
+
+          <button class="ghost" style="padding: 0.5rem 1.25rem;" (click)="downloadReceiptFile(selectedOrder)">
+            Download Receipt
+          </button>
+
+          <!-- Administrator controls -->
+          <ng-container *ngIf="isAdmin && activeTab === 'admin'">
+            <div style="border-left: 2px solid #ddd; margin: 0 0.5rem; height: 35px;"></div>
+            
+            <button class="primary" style="background-color: #f57c00; border-color: #f57c00; padding: 0.5rem 1.25rem;" (click)="openStatus()">
+              Update Status
+            </button>
+            
+            <button class="primary" style="background-color: #7b1fa2; border-color: #7b1fa2; padding: 0.5rem 1.25rem;" (click)="openCourier()">
+              Assign Courier
+            </button>
+
+            <button class="primary" style="background-color: #388e3c; border-color: #388e3c; padding: 0.5rem 1.25rem;" (click)="openTracking()">
+              Add Tracking update
+            </button>
+          </ng-container>
+
+          <!-- Payment Portal Trigger (if unpaid) -->
+          <button class="primary" style="background: #2e7d32;" *ngIf="selectedOrder.payment?.status !== 'Succeeded' && selectedOrder.status !== 'Cancelled'" (click)="pay(selectedOrder)">
+            Pay Now
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
 </div>
 
-<section class="order-list">
-  <article class="panel order-card" *ngFor="let order of orders">
-    <div class="row">
-      <div>
-        <strong>{{ order.orderNumber }}</strong>
-        <p>{{ order.items.length }} items</p>
-      </div>
-      <span class="status">{{ order.status }}</span>
-    </div>
-    <div class="steps">
-      <span [class.done]="['Pending', 'Shipped', 'Delivered'].includes(order.status)">Pending</span>
-      <span [class.done]="['Shipped', 'Delivered'].includes(order.status)">Shipped</span>
-      <span [class.done]="order.status === 'Delivered'">Delivered</span>
-    </div>
-    <div class="line-item" *ngFor="let item of order.items">
-      <span>{{ item.productName }} × {{ item.quantity }}</span>
-      <strong>{{ item.lineTotal | currency: 'INR' }}</strong>
-    </div>
-    <div class="row total">
-      <span>Total</span>
-      <strong>{{ order.totalAmount | currency: 'INR' }}</strong>
-    </div>
-    <button class="primary" *ngIf="order.payment?.status !== 'Succeeded'" (click)="pay(order)">Create payment</button>
-  </article>
-</section>
+<!-- Popups / Dialog Overlays -->
 
-<p class="muted" *ngIf="!orders.length">No orders yet.</p>
+<!-- Cancel Dialog -->
+<div class="dialog-overlay" *ngIf="showCancelDialog">
+  <div class="dialog-box panel" style="max-width: 400px; padding: 1.5rem; border-radius: 8px;">
+    <h3>Cancel Order</h3>
+    <p style="color: #666; font-size: 0.9rem;">Are you sure you want to cancel this order? This operation will replenish inventory stock.</p>
+    <input type="text" placeholder="Reason for cancellation..." [(ngModel)]="reason" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #ddd; margin-top: 0.5rem; margin-bottom: 1rem;" />
+    <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+      <button class="ghost small" (click)="closeDialogs()">Close</button>
+      <button class="danger small" (click)="submitCancel()" [disabled]="!reason">Confirm Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Return Dialog -->
+<div class="dialog-overlay" *ngIf="showReturnDialog">
+  <div class="dialog-box panel" style="max-width: 400px; padding: 1.5rem; border-radius: 8px;">
+    <h3>Request Return</h3>
+    <p style="color: #666; font-size: 0.9rem;">Please provide a reason to request a return or replacement for this delivery.</p>
+    <input type="text" placeholder="Reason for return..." [(ngModel)]="reason" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #ddd; margin-top: 0.5rem; margin-bottom: 1rem;" />
+    <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+      <button class="ghost small" (click)="closeDialogs()">Close</button>
+      <button class="primary small" (click)="submitReturn()" [disabled]="!reason">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- Refund Dialog -->
+<div class="dialog-overlay" *ngIf="showRefundDialog">
+  <div class="dialog-box panel" style="max-width: 400px; padding: 1.5rem; border-radius: 8px;">
+    <h3>Request Refund</h3>
+    <p style="color: #666; font-size: 0.9rem;">Submit a refund request detailing the refund claim reasons.</p>
+    <input type="text" placeholder="Reason for refund..." [(ngModel)]="reason" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #ddd; margin-top: 0.5rem; margin-bottom: 1rem;" />
+    <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+      <button class="ghost small" (click)="closeDialogs()">Close</button>
+      <button class="primary small" (click)="submitRefund()" [disabled]="!reason">Request Refund</button>
+    </div>
+  </div>
+</div>
+
+<!-- Courier Dialog -->
+<div class="dialog-overlay" *ngIf="showCourierDialog">
+  <div class="dialog-box panel" style="max-width: 450px; padding: 1.5rem; border-radius: 8px;">
+    <h3>Assign Courier & Dispatches</h3>
+    
+    <label style="display: block; margin-top: 0.75rem; font-size: 0.85rem; font-weight: bold; color: #555;">Courier Partner</label>
+    <input type="text" placeholder="e.g. DHL, FedEx, UPS..." [(ngModel)]="courierPartner" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #ddd; margin-top: 0.25rem; margin-bottom: 0.75rem;" />
+
+    <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555;">Tracking Number</label>
+    <input type="text" placeholder="Tracking code..." [(ngModel)]="trackingNumber" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #ddd; margin-top: 0.25rem; margin-bottom: 1.25rem;" />
+
+    <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+      <button class="ghost small" (click)="closeDialogs()">Close</button>
+      <button class="primary small" (click)="submitCourier()" [disabled]="!courierPartner || !trackingNumber">Save & Dispatches</button>
+    </div>
+  </div>
+</div>
+
+<!-- Status Dialog -->
+<div class="dialog-overlay" *ngIf="showStatusDialog">
+  <div class="dialog-box panel" style="max-width: 400px; padding: 1.5rem; border-radius: 8px;">
+    <h3>Update Order Status</h3>
+    
+    <label style="display: block; margin-top: 0.75rem; font-size: 0.85rem; font-weight: bold; color: #555;">Select New Status</label>
+    <select [(ngModel)]="selectedStatus" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #ddd; margin-top: 0.25rem; margin-bottom: 1.25rem; font-size: 0.9rem;">
+      <option value="Pending">Pending</option>
+      <option value="Confirmed">Confirmed</option>
+      <option value="Processing">Processing</option>
+      <option value="Packed">Packed</option>
+      <option value="ReadyToShip">Ready To Ship</option>
+      <option value="Shipped">Shipped</option>
+      <option value="OutForDelivery">Out For Delivery</option>
+      <option value="Delivered">Delivered</option>
+      <option value="Cancelled">Cancelled</option>
+      <option value="ReturnRequested">Return Requested</option>
+      <option value="Returned">Returned</option>
+      <option value="RefundRequested">Refund Requested</option>
+      <option value="Refunded">Refunded</option>
+    </select>
+
+    <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+      <button class="ghost small" (click)="closeDialogs()">Close</button>
+      <button class="primary small" (click)="submitStatus()">Update Status</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tracking Update Dialog -->
+<div class="dialog-overlay" *ngIf="showTrackingDialog">
+  <div class="dialog-box panel" style="max-width: 450px; padding: 1.5rem; border-radius: 8px;">
+    <h3>Add Shipment Tracking Location Update</h3>
+    
+    <label style="display: block; margin-top: 0.75rem; font-size: 0.85rem; font-weight: bold; color: #555;">Transit Status / Activity</label>
+    <input type="text" placeholder="e.g. Arrived at Sorting Center, Departed Hub..." [(ngModel)]="trackingStatus" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #ddd; margin-top: 0.25rem; margin-bottom: 0.75rem;" />
+
+    <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555;">Current Location</label>
+    <input type="text" placeholder="e.g. New York Hub, Chicago Sorting Facility..." [(ngModel)]="trackingLocation" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #ddd; margin-top: 0.25rem; margin-bottom: 1.25rem;" />
+
+    <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+      <button class="ghost small" (click)="closeDialogs()">Close</button>
+      <button class="primary small" (click)="submitTrackingUpdate()" [disabled]="!trackingStatus || !trackingLocation">Add Tracking Log</button>
+    </div>
+  </div>
+</div>

@@ -59,7 +59,7 @@ export class AdminComponent implements OnInit {
       description: product.description,
       price: product.price,
       stockQuantity: product.stockQuantity,
-      categoryId: product.category.id,
+      categoryId: product.categoryId,
       isActive: product.isActive,
     };
   }

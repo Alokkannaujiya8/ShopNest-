@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using MediatR;
 using ShopNest.Application.Common;
 using ShopNest.Application.Dtos;
@@ -13,6 +17,17 @@ public sealed record UpdateOrderStatusCommand(Guid OrderId, UpdateOrderStatusReq
 public sealed record GetDashboardStatsQuery : IRequest<DashboardStatsDto>;
 public sealed record UpdateInventoryCommand(Guid ProductId, InventoryUpdateRequest Request) : IRequest<bool>;
 
+// Extended CQRS Records for Order Management
+public sealed record GetOrderByNumberQuery(string OrderNumber, Guid? UserId) : IRequest<OrderDto?>;
+public sealed record CancelOrderCommand(Guid OrderId, Guid? UserId, string Reason) : IRequest<OrderDto?>;
+public sealed record UpdatePaymentStatusCommand(Guid OrderId, string PaymentStatus) : IRequest<OrderDto?>;
+public sealed record RequestReturnCommand(Guid OrderId, Guid UserId, string Reason) : IRequest<OrderDto?>;
+public sealed record RequestRefundCommand(Guid OrderId, Guid UserId, string Reason) : IRequest<OrderDto?>;
+public sealed record AssignCourierCommand(Guid OrderId, string CourierPartner, string TrackingNumber) : IRequest<OrderDto?>;
+public sealed record GetOrderTimelineQuery(Guid OrderId, Guid? UserId) : IRequest<List<OrderStatusHistoryDto>>;
+public sealed record GetOrderTrackingQuery(Guid OrderId, Guid? UserId) : IRequest<List<OrderTrackingDto>>;
+public sealed record AddTrackingUpdateCommand(Guid OrderId, string Status, string Location) : IRequest<OrderDto?>;
+
 public sealed class OrderHandlers(ICartOrderService orders, IAdminService admin) :
     IRequestHandler<CheckoutCommand, OrderDto>,
     IRequestHandler<GetMyOrdersQuery, PagedResult<OrderDto>>,
@@ -20,7 +35,16 @@ public sealed class OrderHandlers(ICartOrderService orders, IAdminService admin)
     IRequestHandler<GetOrderByIdQuery, OrderDto?>,
     IRequestHandler<UpdateOrderStatusCommand, OrderDto?>,
     IRequestHandler<GetDashboardStatsQuery, DashboardStatsDto>,
-    IRequestHandler<UpdateInventoryCommand, bool>
+    IRequestHandler<UpdateInventoryCommand, bool>,
+    IRequestHandler<GetOrderByNumberQuery, OrderDto?>,
+    IRequestHandler<CancelOrderCommand, OrderDto?>,
+    IRequestHandler<UpdatePaymentStatusCommand, OrderDto?>,
+    IRequestHandler<RequestReturnCommand, OrderDto?>,
+    IRequestHandler<RequestRefundCommand, OrderDto?>,
+    IRequestHandler<AssignCourierCommand, OrderDto?>,
+    IRequestHandler<GetOrderTimelineQuery, List<OrderStatusHistoryDto>>,
+    IRequestHandler<GetOrderTrackingQuery, List<OrderTrackingDto>>,
+    IRequestHandler<AddTrackingUpdateCommand, OrderDto?>
 {
     public Task<OrderDto> Handle(CheckoutCommand command, CancellationToken cancellationToken) =>
         orders.CheckoutAsync(command.UserId, command.Request, cancellationToken);
@@ -42,4 +66,31 @@ public sealed class OrderHandlers(ICartOrderService orders, IAdminService admin)
 
     public Task<bool> Handle(UpdateInventoryCommand command, CancellationToken cancellationToken) =>
         admin.UpdateInventoryAsync(command.ProductId, command.Request, cancellationToken);
+
+    public Task<OrderDto?> Handle(GetOrderByNumberQuery query, CancellationToken cancellationToken) =>
+        orders.GetOrderByNumberAsync(query.OrderNumber, query.UserId, cancellationToken);
+
+    public Task<OrderDto?> Handle(CancelOrderCommand command, CancellationToken cancellationToken) =>
+        orders.CancelOrderAsync(command.OrderId, command.UserId, command.Reason, cancellationToken);
+
+    public Task<OrderDto?> Handle(UpdatePaymentStatusCommand command, CancellationToken cancellationToken) =>
+        orders.UpdatePaymentStatusAsync(command.OrderId, command.PaymentStatus, cancellationToken);
+
+    public Task<OrderDto?> Handle(RequestReturnCommand command, CancellationToken cancellationToken) =>
+        orders.RequestReturnAsync(command.OrderId, command.UserId, command.Reason, cancellationToken);
+
+    public Task<OrderDto?> Handle(RequestRefundCommand command, CancellationToken cancellationToken) =>
+        orders.RequestRefundAsync(command.OrderId, command.UserId, command.Reason, cancellationToken);
+
+    public Task<OrderDto?> Handle(AssignCourierCommand command, CancellationToken cancellationToken) =>
+        orders.AssignCourierAsync(command.OrderId, command.CourierPartner, command.TrackingNumber, cancellationToken);
+
+    public Task<List<OrderStatusHistoryDto>> Handle(GetOrderTimelineQuery query, CancellationToken cancellationToken) =>
+        orders.GetOrderTimelineAsync(query.OrderId, query.UserId, cancellationToken);
+
+    public Task<List<OrderTrackingDto>> Handle(GetOrderTrackingQuery query, CancellationToken cancellationToken) =>
+        orders.GetOrderTrackingAsync(query.OrderId, query.UserId, cancellationToken);
+
+    public Task<OrderDto?> Handle(AddTrackingUpdateCommand command, CancellationToken cancellationToken) =>
+        orders.AddTrackingUpdateAsync(command.OrderId, command.Status, command.Location, cancellationToken);
 }

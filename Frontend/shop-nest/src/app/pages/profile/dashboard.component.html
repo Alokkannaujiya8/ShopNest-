@@ -1,0 +1,139 @@
+<section class="dashboard-container">
+  <!-- Loading skeleton -->
+  <div class="loading-state" *ngIf="loading()">
+    <div class="skeleton-header"></div>
+    <div class="metrics-grid">
+      <div class="skeleton-metric" *ngFor="let item of [1, 2, 3, 4]"></div>
+    </div>
+  </div>
+
+  <!-- Connection / Fetch errors -->
+  <div class="error-state" *ngIf="!loading() && error()">
+    <p>Failed to retrieve account metrics. Please try again.</p>
+    <button class="primary" (click)="loadDashboardData()">Retry</button>
+  </div>
+
+  <ng-container *ngIf="!loading() && !error() && summary() as data">
+    <!-- Welcome Header Banner -->
+    <div class="panel welcome-card">
+      <div class="welcome-left">
+        <p class="eyebrow">Customer Account Dashboard</p>
+        <h1>Welcome Back, {{ data.profile.fullName }}!</h1>
+        <p class="summary-text">Manage your profile, monitor active orders, and view saved items.</p>
+      </div>
+      <div class="avatar-large">
+        {{ data.profile.fullName.charAt(0).toUpperCase() }}
+      </div>
+    </div>
+
+    <!-- Quick Metrics Row -->
+    <div class="metrics-grid">
+      <div class="metric-card panel" (click)="navigate('/orders')">
+        <span class="metric-icon">📦</span>
+        <div class="metric-info">
+          <h3>Total Orders</h3>
+          <span class="value">{{ data.totalOrdersCount }}</span>
+        </div>
+      </div>
+
+      <div class="metric-card panel" (click)="navigate('/orders')">
+        <span class="metric-icon">⏳</span>
+        <div class="metric-info">
+          <h3>Pending Orders</h3>
+          <span class="value">{{ data.pendingOrdersCount }}</span>
+        </div>
+      </div>
+
+      <div class="metric-card panel" (click)="navigate('/orders')">
+        <span class="metric-icon">✅</span>
+        <div class="metric-info">
+          <h3>Delivered Orders</h3>
+          <span class="value">{{ data.deliveredOrdersCount }}</span>
+        </div>
+      </div>
+
+      <div class="metric-card panel" (click)="navigate('/wishlist')">
+        <span class="metric-icon">❤️</span>
+        <div class="metric-info">
+          <h3>Wishlist Items</h3>
+          <span class="value">{{ data.wishlistCount }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions Panel -->
+    <div class="panel actions-panel">
+      <h2>Account Quick Actions</h2>
+      <div class="actions-buttons">
+        <button class="primary" (click)="navigate('/catalog')">🛒 Continue Shopping</button>
+        <button class="outline" (click)="navigate('/orders')">📦 View Orders</button>
+        <button class="outline" (click)="navigate('/wishlist')">❤️ Manage Wishlist</button>
+        <button class="outline" (click)="navigate('/profile')">👤 Edit My Profile</button>
+      </div>
+    </div>
+
+    <div class="dashboard-split-grid">
+      <!-- Recent Orders Table -->
+      <div class="panel split-left">
+        <div class="panel-header">
+          <h2>Recent Orders</h2>
+          <a routerLink="/orders" class="view-all-link">View All</a>
+        </div>
+        
+        <div class="table-wrapper" *ngIf="data.recentOrders.length > 0; else noOrders">
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Status</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let order of data.recentOrders">
+                <td>#{{ order.orderNumber }}</td>
+                <td>
+                  <span class="status-pill" [attr.data-status]="order.status.toLowerCase()">
+                    {{ order.status }}
+                  </span>
+                </td>
+                <td>{{ order.totalAmount | currency }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noOrders>
+          <div class="empty-state">No recent order history found.</div>
+        </ng-template>
+      </div>
+
+      <!-- Wishlist Quick Preview -->
+      <div class="panel split-right">
+        <div class="panel-header">
+          <h2>Wishlist Preview</h2>
+          <a routerLink="/wishlist" class="view-all-link">View All</a>
+        </div>
+
+        <div class="wishlist-grid" *ngIf="data.wishlistProducts.length > 0; else noWishlist">
+          <a 
+            *ngFor="let item of data.wishlistProducts" 
+            [routerLink]="['/catalog/product', item.slug]"
+            class="wishlist-preview-card"
+          >
+            <img 
+              [src]="item.images[0]?.url || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=150&q=80'" 
+              [alt]="item.name" 
+            />
+            <div class="preview-info">
+              <h4>{{ item.name }}</h4>
+              <span class="price">{{ item.price | currency }}</span>
+            </div>
+          </a>
+        </div>
+        <ng-template #noWishlist>
+          <div class="empty-state">Your wishlist is currently empty.</div>
+        </ng-template>
+      </div>
+    </div>
+  </ng-container>
+</section>

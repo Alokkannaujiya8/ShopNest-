@@ -1,0 +1,703 @@
+<div class="admin-reports-container">
+  <!-- Header Title -->
+  <div class="reports-header">
+    <h1>Reports & Analytics Dashboard</h1>
+    <div class="header-actions">
+      <span class="toast-notice" *ngIf="notice">{{ notice }}</span>
+      <span class="toast-error" *ngIf="errorMsg">{{ errorMsg }}</span>
+    </div>
+  </div>
+
+  <!-- Main Navigation Tabs -->
+  <div class="reports-tabs">
+    <button [class.active]="activeTab === 'dashboard'" (click)="switchTab('dashboard')">Overview</button>
+    <button [class.active]="activeTab === 'sales'" (click)="switchTab('sales')">Sales Analytics</button>
+    <button [class.active]="activeTab === 'revenue'" (click)="switchTab('revenue')">Revenue</button>
+    <button [class.active]="activeTab === 'orders'" (click)="switchTab('orders')">Orders</button>
+    <button [class.active]="activeTab === 'customers'" (click)="switchTab('customers')">Customers</button>
+    <button [class.active]="activeTab === 'products'" (click)="switchTab('products')">Products</button>
+    <button [class.active]="activeTab === 'inventory'" (click)="switchTab('inventory')">Inventory</button>
+    <button [class.active]="activeTab === 'payments'" (click)="switchTab('payments')">Payments</button>
+    <button [class.active]="activeTab === 'coupons'" (click)="switchTab('coupons')">Coupons</button>
+    <button [class.active]="activeTab === 'reviews'" (click)="switchTab('reviews')">Reviews</button>
+  </div>
+
+  <!-- Filters Row (Active for all reports except inventory/dashboard) -->
+  <div class="filters-row" *ngIf="activeTab !== 'dashboard' && activeTab !== 'inventory'">
+    <div class="filter-group">
+      <label>Start Date</label>
+      <input type="date" [(ngModel)]="startDate" (change)="loadData()">
+    </div>
+    <div class="filter-group">
+      <label>End Date</label>
+      <input type="date" [(ngModel)]="endDate" (change)="loadData()">
+    </div>
+
+    <!-- Category Filter (Sales & Products only) -->
+    <div class="filter-group" *ngIf="activeTab === 'sales' || activeTab === 'products'">
+      <label>Category</label>
+      <select [(ngModel)]="categoryId" (change)="loadData()">
+        <option value="">All Categories</option>
+        <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+      </select>
+    </div>
+
+    <!-- Brand Filter (Sales & Products only) -->
+    <div class="filter-group" *ngIf="activeTab === 'sales' || activeTab === 'products'">
+      <label>Brand</label>
+      <select [(ngModel)]="brandId" (change)="loadData()">
+        <option value="">All Brands</option>
+        <option *ngFor="let b of brands" [value]="b.id">{{ b.name }}</option>
+      </select>
+    </div>
+
+    <!-- Order Status Filter (Orders only) -->
+    <div class="filter-group" *ngIf="activeTab === 'orders'">
+      <label>Status</label>
+      <select [(ngModel)]="orderStatus" (change)="loadData()">
+        <option value="">All Statuses</option>
+        <option value="Pending">Pending</option>
+        <option value="Processing">Processing</option>
+        <option value="Delivered">Delivered</option>
+        <option value="Cancelled">Cancelled</option>
+        <option value="Returned">Returned</option>
+      </select>
+    </div>
+
+    <!-- Payment Method Filter (Payments only) -->
+    <div class="filter-group" *ngIf="activeTab === 'payments'">
+      <label>Gateway</label>
+      <select [(ngModel)]="paymentMethod" (change)="loadData()">
+        <option value="">All Gateways</option>
+        <option value="COD">COD</option>
+        <option value="Stripe">Stripe</option>
+        <option value="Razorpay">Razorpay</option>
+        <option value="PayPal">PayPal</option>
+      </select>
+    </div>
+
+    <!-- Actions -->
+    <div class="filter-actions">
+      <button class="btn-refresh" (click)="loadData()" [disabled]="loading">Refresh</button>
+      <button class="btn-export csv" (click)="export('csv')" [disabled]="exporting">CSV</button>
+      <button class="btn-export excel" (click)="export('excel')" [disabled]="exporting">Excel</button>
+      <button class="btn-export pdf" (click)="export('pdf')" [disabled]="exporting">PDF</button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading analytics data, please wait...</p>
+  </div>
+
+  <!-- Tab Content Views -->
+  <div class="reports-body" *ngIf="!loading">
+
+    <!-- 1. OVERVIEW SUMMARY -->
+    <div *ngIf="activeTab === 'dashboard'" class="overview-pane">
+      <div class="metrics-grid" *ngIf="summary">
+        <div class="metric-card">
+          <div class="card-icon blue">💰</div>
+          <div class="card-info">
+            <span class="card-label">Total Revenue</span>
+            <span class="card-val">{{ summary.totalRevenue | currency:'USD' }}</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="card-icon green">📈</div>
+          <div class="card-info">
+            <span class="card-label">Monthly Revenue</span>
+            <span class="card-val">{{ summary.monthlyRevenue | currency:'USD' }}</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="card-icon purple">🛒</div>
+          <div class="card-info">
+            <span class="card-label">Avg Order Value</span>
+            <span class="card-val">{{ summary.averageOrderValue | currency:'USD' }}</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="card-icon orange">📦</div>
+          <div class="card-info">
+            <span class="card-label">Total Orders</span>
+            <span class="card-val">{{ summary.totalOrders }}</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="card-icon teal">👥</div>
+          <div class="card-info">
+            <span class="card-label">Customers</span>
+            <span class="card-val">{{ summary.totalCustomers }}</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="card-icon red">🏷️</div>
+          <div class="card-info">
+            <span class="card-label">Active Products</span>
+            <span class="card-val">{{ summary.activeProducts }} / {{ summary.totalProducts }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-details-row" *ngIf="summary">
+        <div class="details-card">
+          <h3>Order Status Breakdown</h3>
+          <div class="status-list">
+            <div class="status-item">
+              <span class="dot pending"></span>
+              <span class="status-name">Pending</span>
+              <span class="status-count">{{ summary.pendingOrders }}</span>
+            </div>
+            <div class="status-item">
+              <span class="dot processing"></span>
+              <span class="status-name">Processing</span>
+              <span class="status-count">{{ summary.processingOrders }}</span>
+            </div>
+            <div class="status-item">
+              <span class="dot delivered"></span>
+              <span class="status-name">Delivered</span>
+              <span class="status-count">{{ summary.deliveredOrders }}</span>
+            </div>
+            <div class="status-item">
+              <span class="dot cancelled"></span>
+              <span class="status-name">Cancelled</span>
+              <span class="status-count">{{ summary.cancelledOrders }}</span>
+            </div>
+            <div class="status-item">
+              <span class="dot returned"></span>
+              <span class="status-name">Returned</span>
+              <span class="status-count">{{ summary.returnedOrders }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="details-card">
+          <h3>Stock Alerts</h3>
+          <div class="stock-alerts">
+            <div class="alert-item error">
+              <span class="alert-label">Out of Stock Products</span>
+              <span class="alert-val">{{ summary.outOfStockProducts }}</span>
+            </div>
+            <div class="alert-item warning">
+              <span class="alert-label">Low Stock Products</span>
+              <span class="alert-val">{{ summary.lowStockProducts }}</span>
+            </div>
+            <div class="alert-item info">
+              <span class="alert-label">Product Categories</span>
+              <span class="alert-val">{{ summary.totalCategories }}</span>
+            </div>
+            <div class="alert-item info">
+              <span class="alert-label">Product Brands</span>
+              <span class="alert-val">{{ summary.totalBrands }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. SALES ANALYTICS -->
+    <div *ngIf="activeTab === 'sales'" class="sales-pane">
+      <div class="chart-and-controls">
+        <div class="chart-header">
+          <h3>Sales Volumes</h3>
+          <div class="chart-tabs">
+            <button [class.active]="salesInterval === 'daily'" (click)="salesInterval = 'daily'; updateSalesChart()">Daily</button>
+            <button [class.active]="salesInterval === 'weekly'" (click)="salesInterval = 'weekly'; updateSalesChart()">Weekly</button>
+            <button [class.active]="salesInterval === 'monthly'" (click)="salesInterval = 'monthly'; updateSalesChart()">Monthly</button>
+            <button [class.active]="salesInterval === 'yearly'" (click)="salesInterval = 'yearly'; updateSalesChart()">Yearly</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <app-svg-chart [chartType]="chartType" [data]="chartData"></app-svg-chart>
+        </div>
+      </div>
+
+      <div class="grid-two-cols" *ngIf="sales">
+        <div class="details-card">
+          <h3>Sales By Category</h3>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Revenue</th>
+                <th>Units Sold</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let cat of sales.salesByCategory">
+                <td>{{ cat.categoryName }}</td>
+                <td>{{ cat.revenue | currency:'USD' }}</td>
+                <td>{{ cat.itemsSold }}</td>
+              </tr>
+              <tr *ngIf="!sales.salesByCategory.length">
+                <td colspan="3" class="text-center">No categories recorded.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="details-card">
+          <h3>Top Selling Products</h3>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Product Name</th>
+                <th>SKU</th>
+                <th>Qty Sold</th>
+                <th>Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of sales.topSellingProducts">
+                <td>{{ p.productName }}</td>
+                <td><code>{{ p.sku }}</code></td>
+                <td>{{ p.quantitySold }}</td>
+                <td>{{ p.revenue | currency:'USD' }}</td>
+              </tr>
+              <tr *ngIf="!sales.topSellingProducts.length">
+                <td colspan="4" class="text-center">No items sold.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. REVENUE REPORT -->
+    <div *ngIf="activeTab === 'revenue'" class="revenue-pane">
+      <div class="revenue-cards" *ngIf="revenue">
+        <div class="rev-card">
+          <h4>Gross Revenue</h4>
+          <p class="value">{{ revenue.grossRevenue | currency:'USD' }}</p>
+        </div>
+        <div class="rev-card">
+          <h4>Discounts Given</h4>
+          <p class="value negative">-{{ revenue.discountGiven | currency:'USD' }}</p>
+        </div>
+        <div class="rev-card highlight">
+          <h4>Net Revenue</h4>
+          <p class="value">{{ revenue.netRevenue | currency:'USD' }}</p>
+        </div>
+        <div class="rev-card">
+          <h4>Shipping Collected</h4>
+          <p class="value">{{ revenue.totalShippingCost | currency:'USD' }}</p>
+        </div>
+        <div class="rev-card">
+          <h4>Taxes Collected</h4>
+          <p class="value">{{ revenue.totalTax | currency:'USD' }}</p>
+        </div>
+      </div>
+
+      <div class="chart-container-large">
+        <h3>Revenue Performance Trend</h3>
+        <div class="chart-box">
+          <app-svg-chart chartType="area" [data]="chartData" color="#2e7d32"></app-svg-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. ORDERS REPORT -->
+    <div *ngIf="activeTab === 'orders'" class="orders-pane">
+      <div class="order-summary-row" *ngIf="orders">
+        <div class="summary-metric">
+          Total Orders Checked: <strong>{{ orders.totalOrders }}</strong>
+        </div>
+        <div class="summary-metric">
+          Refunds Processed: <strong class="negative">{{ orders.totalRefunded | currency:'USD' }}</strong>
+        </div>
+      </div>
+
+      <div class="grid-two-cols-large">
+        <div class="chart-section">
+          <h3>Orders Distribution</h3>
+          <app-svg-chart chartType="bar" [data]="chartData"></app-svg-chart>
+        </div>
+        
+        <div class="table-section">
+          <h3>Order Invoices</h3>
+          <table class="report-table flex-table">
+            <thead>
+              <tr>
+                <th>Order Number</th>
+                <th>Customer</th>
+                <th>Status</th>
+                <th>Payment Method</th>
+                <th>Amount</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ord of orders?.orders">
+                <td><code>{{ ord.orderNumber }}</code></td>
+                <td>{{ ord.customerName }}</td>
+                <td>
+                  <span class="status-badge" [attr.data-status]="ord.status">{{ ord.status }}</span>
+                </td>
+                <td>{{ ord.paymentMethod || 'COD' }}</td>
+                <td>{{ ord.totalAmount | currency:'USD' }}</td>
+                <td>{{ ord.createdAtUtc | date:'short' }}</td>
+              </tr>
+              <tr *ngIf="!orders?.orders?.length">
+                <td colspan="6" class="text-center">No orders found matching filters.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. CUSTOMERS REPORT -->
+    <div *ngIf="activeTab === 'customers'" class="customers-pane">
+      <div class="metrics-grid" *ngIf="customers">
+        <div class="metric-card">
+          <div class="card-icon">👥</div>
+          <div class="card-info">
+            <span class="card-label">Total Register Customers</span>
+            <span class="card-val">{{ customers.totalCustomers }}</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="card-icon">🆕</div>
+          <div class="card-info">
+            <span class="card-label">New Customers in Range</span>
+            <span class="card-val">{{ customers.newCustomersCount }}</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="card-icon">⚡</div>
+          <div class="card-info">
+            <span class="card-label">Active Buyers in Range</span>
+            <span class="card-val">{{ customers.activeCustomersCount }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-two-cols" *ngIf="customers">
+        <div class="details-card">
+          <h3>Top Customers (Spending)</h3>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Customer Name</th>
+                <th>Email Address</th>
+                <th>Order Count</th>
+                <th>Total Spent</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let tc of customers.topCustomers">
+                <td>{{ tc.fullName }}</td>
+                <td>{{ tc.email }}</td>
+                <td>{{ tc.orderCount }}</td>
+                <td><strong>{{ tc.totalSpent | currency:'USD' }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="details-card">
+          <h3>Recent Customer Purchases</h3>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Order Number</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ph of customers.purchaseHistories.slice(0, 10)">
+                <td>{{ ph.fullName }}</td>
+                <td><code>{{ ph.orderNumber }}</code></td>
+                <td>{{ ph.amount | currency:'USD' }}</td>
+                <td>
+                  <span class="status-badge" [attr.data-status]="ph.status">{{ ph.status }}</span>
+                </td>
+                <td>{{ ph.orderDate | date:'short' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. PRODUCTS PERFORMANCE -->
+    <div *ngIf="activeTab === 'products'" class="products-pane">
+      <div class="details-card mb-4" *ngIf="products">
+        <h3>Product Sales & Performance Log</h3>
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>Product ID</th>
+              <th>Product Name</th>
+              <th>SKU</th>
+              <th>Total Units Sold</th>
+              <th>Total Revenue Generated</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let perf of products.performance">
+              <td><code>{{ perf.productId.substring(0, 8) }}</code></td>
+              <td>{{ perf.productName }}</td>
+              <td><code>{{ perf.sku }}</code></td>
+              <td>{{ perf.quantitySold }}</td>
+              <td>{{ perf.revenueGenerated | currency:'USD' }}</td>
+            </tr>
+            <tr *ngIf="!products.performance.length">
+              <td colspan="5" class="text-center">No product performance data in selected parameters.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid-two-cols" *ngIf="products">
+        <div class="details-card warning-card">
+          <h3>Low Stock Warnings</h3>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>In Stock</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ls of products.lowStockProducts">
+                <td>{{ ls.productName }}</td>
+                <td><code>{{ ls.sku }}</code></td>
+                <td class="text-warning"><strong>{{ ls.stockQuantity }}</strong></td>
+                <td>{{ ls.price | currency:'USD' }}</td>
+              </tr>
+              <tr *ngIf="!products.lowStockProducts.length">
+                <td colspan="4" class="text-center">All products are healthy.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="details-card danger-card">
+          <h3>Out of Stock Alerts</h3>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Stock</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let os of products.outOfStockProducts">
+                <td>{{ os.productName }}</td>
+                <td><code>{{ os.sku }}</code></td>
+                <td class="text-danger"><strong>0</strong></td>
+                <td>{{ os.price | currency:'USD' }}</td>
+              </tr>
+              <tr *ngIf="!products.outOfStockProducts.length">
+                <td colspan="4" class="text-center">No products out of stock.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. INVENTORY REPORT -->
+    <div *ngIf="activeTab === 'inventory'" class="inventory-pane">
+      <div class="inventory-status-row" *ngIf="inventory">
+        <div class="status-box healthy">
+          <h4>In-Stock Items</h4>
+          <p class="value">{{ inventory.inStockCount }}</p>
+        </div>
+        <div class="status-box warning">
+          <h4>Low Stock Items</h4>
+          <p class="value">{{ inventory.lowStockCount }}</p>
+        </div>
+        <div class="status-box danger">
+          <h4>Out of Stock Items</h4>
+          <p class="value">{{ inventory.outOfStockCount }}</p>
+        </div>
+        <div class="status-box total">
+          <h4>Total Inventory Quantity</h4>
+          <p class="value">{{ inventory.totalStockQuantity }}</p>
+        </div>
+      </div>
+
+      <div class="grid-two-cols-large" *ngIf="inventory">
+        <div class="chart-section">
+          <h3>Stock Distribution</h3>
+          <app-svg-chart chartType="doughnut" [data]="chartData"></app-svg-chart>
+        </div>
+
+        <div class="table-section">
+          <h3>Recent Inventory Operations</h3>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Type</th>
+                <th>Quantity Change</th>
+                <th>Reason</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let tx of inventory.recentTransactions">
+                <td>{{ tx.productName }}</td>
+                <td><code>{{ tx.sku }}</code></td>
+                <td>
+                  <span class="status-badge" [attr.data-status]="tx.transactionType">{{ tx.transactionType }}</span>
+                </td>
+                <td [class.negative]="tx.quantity < 0" [class.positive]="tx.quantity > 0">
+                  <strong>{{ tx.quantity > 0 ? '+' : '' }}{{ tx.quantity }}</strong>
+                </td>
+                <td>{{ tx.reason }}</td>
+                <td>{{ tx.createdAtUtc | date:'short' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. PAYMENTS REPORT -->
+    <div *ngIf="activeTab === 'payments'" class="payments-pane">
+      <div class="metrics-grid" *ngIf="payments">
+        <div class="metric-card">
+          <div class="card-icon green">✔️</div>
+          <div class="card-info">
+            <span class="card-label">Succeeded Payments</span>
+            <span class="card-val">{{ payments.successCount }}</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="card-icon orange">⏳</div>
+          <div class="card-info">
+            <span class="card-label">Pending Payments</span>
+            <span class="card-val">{{ payments.pendingCount }}</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="card-icon red">❌</div>
+          <div class="card-info">
+            <span class="card-label">Failed Payments</span>
+            <span class="card-val">{{ payments.failedCount }}</span>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="card-icon purple">↩️</div>
+          <div class="card-info">
+            <span class="card-label">Refunds Issued</span>
+            <span class="card-val">{{ payments.totalRefunded | currency:'USD' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-two-cols-large" *ngIf="payments">
+        <div class="chart-section">
+          <h3>Payment Gateway Usage</h3>
+          <app-svg-chart chartType="pie" [data]="chartData"></app-svg-chart>
+        </div>
+
+        <div class="table-section">
+          <h3>Recent Transactions</h3>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Order Number</th>
+                <th>Customer</th>
+                <th>Gateway</th>
+                <th>Status</th>
+                <th>Amount</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of payments.recentPayments">
+                <td><code>{{ p.orderNumber }}</code></td>
+                <td>{{ p.customerName }}</td>
+                <td>{{ p.provider }}</td>
+                <td>
+                  <span class="status-badge" [attr.data-status]="p.status">{{ p.status }}</span>
+                </td>
+                <td>{{ p.amount | currency:'USD' }}</td>
+                <td>{{ p.createdAtUtc | date:'short' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. COUPONS REPORT -->
+    <div *ngIf="activeTab === 'coupons'" class="coupons-pane">
+      <div class="details-card mb-4" *ngIf="coupons">
+        <h3>Coupon Campaigns Performance</h3>
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>Coupon Code</th>
+              <th>Rule Target</th>
+              <th>Value</th>
+              <th>Usage Count</th>
+              <th>Total Savings Given</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let cp of coupons.performance">
+              <td><strong>{{ cp.code }}</strong></td>
+              <td>Min order {{ cp.minOrderAmount | currency:'USD' }}</td>
+              <td>{{ cp.discountValue }}{{ cp.isPercent ? '%' : ' USD' }}</td>
+              <td>{{ cp.usageCount }}</td>
+              <td><strong>{{ cp.totalSavings | currency:'USD' }}</strong></td>
+            </tr>
+            <tr *ngIf="!coupons.performance.length">
+              <td colspan="5" class="text-center">No coupon usages found in date range.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 10. REVIEWS REPORT -->
+    <div *ngIf="activeTab === 'reviews'" class="reviews-pane">
+      <div class="grid-two-cols-large" *ngIf="reviews">
+        <div class="chart-section">
+          <div class="rating-overall">
+            <h4>Average Customer Rating</h4>
+            <div class="stars-val">{{ reviews.averageRating | number:'1.1-2' }} ⭐</div>
+          </div>
+          <h3>Rating Distribution</h3>
+          <app-svg-chart chartType="bar" [data]="chartData"></app-svg-chart>
+        </div>
+
+        <div class="table-section">
+          <h3>Most Reviewed Products</h3>
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Product Name</th>
+                <th>Reviews Count</th>
+                <th>Avg Rating</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let mr of reviews.mostReviewed">
+                <td>{{ mr.productName }}</td>
+                <td>{{ mr.reviewCount }}</td>
+                <td><strong>{{ mr.averageRating | number:'1.1-1' }} ⭐</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

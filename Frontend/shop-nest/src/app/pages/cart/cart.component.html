@@ -1,35 +1,170 @@
-<section class="page-head">
-  <div>
-    <p class="eyebrow">Checkout</p>
-    <h1>Cart</h1>
-  </div>
-</section>
+<div class="wishlist-page-container">
+  
+  <section class="page-head">
+    <div>
+      <p class="eyebrow">Shopping Session</p>
+      <h1>My Shopping Cart ({{ cart?.items?.length || 0 }} items)</h1>
+    </div>
+    <div *ngIf="cart && cart.items.length > 0">
+      <button class="ghost" style="border-color: #d32f2f; color: #d32f2f;" (click)="clearCart()">
+        Clear Cart
+      </button>
+    </div>
+  </section>
 
-<section class="split">
-  <div class="panel">
-    <div class="line-item" *ngFor="let item of cart?.items">
-      <div>
-        <strong>{{ item.productName }}</strong>
-        <p>{{ item.unitPrice | currency: 'INR' }} each</p>
+  <!-- Notification Banner -->
+  <p class="notice success" *ngIf="message">{{ message }}</p>
+  <p class="notice error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+  <!-- Loader -->
+  <div class="loader-wrapper" *ngIf="loading" style="text-align: center; padding: 5rem;">
+    <div class="spinner"></div>
+    <p style="margin-top: 1rem; color: #666; font-weight: bold;">Updating cart...</p>
+  </div>
+
+  <section class="split-layout" *ngIf="!loading && cart && cart.items.length > 0" style="grid-template-columns: 1fr 380px;">
+    
+    <!-- Left: Cart Items Table -->
+    <div class="filters-sidebar" style="gap: 1rem;">
+      <div class="panel table-panel" style="padding: 1rem;">
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Stock Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of cart.items">
+                <td class="product-td" style="display: flex; align-items: center; gap: 1rem;">
+                  <img [src]="image(item)" class="product-thumb" alt="Product Image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />
+                  <div>
+                    <div style="font-weight: bold; color: #333;">{{ item.productName }}</div>
+                    <div style="font-size: 0.75rem; color: #777;">SKU: {{ item.productSku }}</div>
+                    <div style="font-size: 0.75rem; color: #888;">{{ item.categoryName }} | {{ item.brandName || 'Brand' }}</div>
+                  </div>
+                </td>
+                <td>
+                  <div style="font-weight: bold;">${{ item.unitPrice | number:'1.2-2' }}</div>
+                  <div style="text-decoration: line-through; font-size: 0.75rem; color: #999;" *ngIf="item.originalPrice > item.unitPrice">
+                    ${{ item.originalPrice | number:'1.2-2' }}
+                  </div>
+                </td>
+                <td>
+                  <!-- Stepper -->
+                  <div style="display: flex; align-items: center; gap: 0.35rem;">
+                    <button class="ghost" style="padding: 0.15rem 0.5rem;" (click)="decreaseQuantity(item)">-</button>
+                    <span style="font-weight: bold; min-width: 20px; text-align: center;">{{ item.quantity }}</span>
+                    <button class="ghost" style="padding: 0.15rem 0.5rem;" (click)="increaseQuantity(item)" [disabled]="item.quantity >= item.availableQuantity">+</button>
+                  </div>
+                </td>
+                <td style="font-weight: bold; color: #0d47a1;">
+                  ${{ item.lineTotal | number:'1.2-2' }}
+                </td>
+                <td>
+                  <span class="status-badge" [class.active]="item.availableQuantity > 0" [class.inactive]="item.availableQuantity === 0">
+                    {{ item.availableQuantity > 0 ? 'In Stock' : 'Out of Stock' }}
+                  </span>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 6px;">
+                    <button class="ghost" style="border-color: var(--accent); color: var(--accent); padding: 0.25rem 0.5rem;" (click)="moveToWishlist(item)">
+                      Wishlist
+                    </button>
+                    <button class="ghost" style="border-color: #d32f2f; color: #d32f2f; padding: 0.25rem 0.5rem;" (click)="remove(item.id)">
+                      Remove
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <input type="number" min="1" [ngModel]="item.quantity" (ngModelChange)="update(item.id, +$event)" />
-      <strong>{{ item.lineTotal | currency: 'INR' }}</strong>
-      <button class="icon" type="button" title="Remove item" (click)="remove(item.id)">×</button>
-    </div>
-    <p class="muted" *ngIf="!cart?.items?.length">Your cart is empty.</p>
-  </div>
 
-  <form class="panel summary" (ngSubmit)="checkout()">
-    <h2>Order summary</h2>
-    <div class="row total">
-      <span>Total</span>
-      <strong>{{ cart?.total || 0 | currency: 'INR' }}</strong>
+      <!-- Coupon Panel -->
+      <div class="panel" style="padding: 1.25rem;">
+        <h4>Apply Promo Code / Coupon</h4>
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;" *ngIf="!cart.appliedCouponCode">
+          <input type="text" [(ngModel)]="couponCode" placeholder="Enter coupon code..." style="flex-grow: 1; padding: 0.5rem;" />
+          <button class="primary" (click)="applyCoupon()" [disabled]="couponLoading || !couponCode.trim()">
+            Apply
+          </button>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; background-color: #f1f8e9; border: 1px dashed #7cb342; padding: 0.75rem; border-radius: 4px; margin-top: 0.5rem;" *ngIf="cart.appliedCouponCode">
+          <div>
+            <span style="font-weight: bold; color: #33691e;">🔥 Applied Code: {{ cart.appliedCouponCode }}</span>
+            <span style="font-size: 0.85rem; color: #558b2f; margin-left: 0.5rem;">(-${{ cart.couponDiscount | number:'1.2-2' }} discount)</span>
+          </div>
+          <button class="ghost" style="border-color: #d32f2f; color: #d32f2f; padding: 0.15rem 0.5rem;" (click)="removeCoupon()">
+            Remove
+          </button>
+        </div>
+      </div>
     </div>
-    <label>
-      Shipping address
-      <textarea name="shippingAddress" [(ngModel)]="shippingAddress" required rows="5"></textarea>
-    </label>
-    <button class="primary" type="submit" [disabled]="!cart?.items?.length || !shippingAddress">Checkout</button>
-    <p class="notice" *ngIf="message">{{ message }}</p>
-  </form>
-</section>
+
+    <!-- Right: Summary Card -->
+    <div class="summary-card">
+      <div class="panel" style="padding: 1.5rem;">
+        <h2 style="margin-top: 0;">Order Summary</h2>
+        
+        <div class="summary-rows" style="display: flex; flex-direction: column; gap: 0.75rem; margin: 1.25rem 0; font-size: 0.95rem;">
+          <div style="display: flex; justify-content: space-between;">
+            <span>Subtotal</span>
+            <span>${{ cart.subtotal | number:'1.2-2' }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; color: #2e7d32;" *ngIf="cart.totalDiscount > 0">
+            <span>Product Discount</span>
+            <span>-${{ cart.totalDiscount | number:'1.2-2' }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; color: #2e7d32;" *ngIf="cart.couponDiscount > 0">
+            <span>Coupon Discount</span>
+            <span>-${{ cart.couponDiscount | number:'1.2-2' }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span>Shipping Charges</span>
+            <span>{{ cart.shippingCharges > 0 ? '$' + (cart.shippingCharges | number:'1.2-2') : 'FREE' }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span>Estimated Tax (10%)</span>
+            <span>${{ cart.estimatedTax | number:'1.2-2' }}</span>
+          </div>
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 0.5rem 0;" />
+          <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem; color: #0d47a1;">
+            <span>Grand Total</span>
+            <span>${{ cart.grandTotal | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <form (ngSubmit)="checkout()" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem;">
+          <div>
+            <label style="font-weight: bold; font-size: 0.9rem; display: block; margin-bottom: 0.35rem;">
+              Shipping Address
+            </label>
+            <textarea name="shippingAddress" [(ngModel)]="shippingAddress" required placeholder="Enter complete delivery address..." rows="4" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;"></textarea>
+          </div>
+          <button class="primary" type="submit" [disabled]="!cart.items.length || !shippingAddress.trim() || loading" style="width: 100%; padding: 0.75rem;">
+            Proceed to Checkout
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Empty State -->
+  <section class="panel empty-state" *ngIf="!loading && (!cart || cart.items.length === 0)" style="text-align: center; padding: 5rem; margin-top: 1.5rem;">
+    <div style="font-size: 4rem; color: #ccc; margin-bottom: 1.5rem;">🛒</div>
+    <h2>Your Cart is Empty</h2>
+    <p style="color: #666; max-width: 450px; margin: 0.5rem auto 1.5rem auto;">
+      Looks like you haven't added anything to your cart yet. Browse our products and discover great deals.
+    </p>
+    <button class="primary" routerLink="/catalog">Continue Shopping</button>
+  </section>
+
+</div>

@@ -1,0 +1,154 @@
+<section class="auth-shell">
+  <form class="panel auth-panel" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <div class="auth-header">
+      <p class="eyebrow">ShopNest Portal</p>
+      <h1>Create Account</h1>
+      <p class="auth-subtitle">Join the premium shopping experience</p>
+    </div>
+
+    <!-- Full Name Field -->
+    <label class="form-field">
+      <span>Full Name</span>
+      <input 
+        type="text" 
+        formControlName="fullName" 
+        placeholder="John Doe"
+        [class.invalid]="registerForm.controls.fullName.touched && registerForm.controls.fullName.invalid"
+      />
+      <span class="error" *ngIf="registerForm.controls.fullName.touched && registerForm.controls.fullName.errors?.['required']">
+        Full Name is required.
+      </span>
+      <span class="error" *ngIf="registerForm.controls.fullName.touched && registerForm.controls.fullName.errors?.['minlength']">
+        Name must be at least 3 characters.
+      </span>
+    </label>
+
+    <!-- Email Field -->
+    <label class="form-field">
+      <span>Email Address</span>
+      <input 
+        type="email" 
+        formControlName="email" 
+        placeholder="name@example.com"
+        [class.invalid]="registerForm.controls.email.touched && registerForm.controls.email.invalid"
+      />
+      <span class="error" *ngIf="registerForm.controls.email.touched && registerForm.controls.email.errors?.['required']">
+        Email is required.
+      </span>
+      <span class="error" *ngIf="registerForm.controls.email.touched && registerForm.controls.email.errors?.['email']">
+        Please enter a valid email address.
+      </span>
+    </label>
+
+    <!-- Mobile Number Field -->
+    <label class="form-field">
+      <span>Mobile Number</span>
+      <input 
+        type="text" 
+        formControlName="mobileNumber" 
+        placeholder="+919876543210"
+        [class.invalid]="registerForm.controls.mobileNumber.touched && registerForm.controls.mobileNumber.invalid"
+      />
+      <span class="error" *ngIf="registerForm.controls.mobileNumber.touched && registerForm.controls.mobileNumber.errors?.['required']">
+        Mobile number is required.
+      </span>
+      <span class="error" *ngIf="registerForm.controls.mobileNumber.touched && registerForm.controls.mobileNumber.errors?.['invalidMobile']">
+        Please enter a valid phone number (e.g. +919876543210).
+      </span>
+    </label>
+
+    <!-- Password Field -->
+    <label class="form-field">
+      <span>Password</span>
+      <div class="password-input-wrapper">
+        <input 
+          [type]="showPassword() ? 'text' : 'password'" 
+          formControlName="password" 
+          placeholder="••••••••"
+          (input)="onPasswordInput(passwordInput.value)"
+          #passwordInput
+          [class.invalid]="registerForm.controls.password.touched && registerForm.controls.password.invalid"
+        />
+        <button 
+          type="button" 
+          class="password-toggle-btn"
+          (click)="showPassword.set(!showPassword())"
+          [title]="showPassword() ? 'Hide Password' : 'Show Password'"
+        >
+          <span>{{ showPassword() ? '👁️' : '🔒' }}</span>
+        </button>
+      </div>
+      <span class="error" *ngIf="registerForm.controls.password.touched && registerForm.controls.password.errors?.['required']">
+        Password is required.
+      </span>
+      <span class="error" *ngIf="registerForm.controls.password.touched && registerForm.controls.password.errors?.['passwordStrength']">
+        Must contain uppercase, lowercase, number, special char, and be 8+ chars.
+      </span>
+    </label>
+
+    <!-- Password Strength Meter -->
+    <div class="strength-meter" *ngIf="registerForm.controls.password.value">
+      <div class="strength-track">
+        <div class="strength-fill" [ngClass]="strengthClass()"></div>
+      </div>
+      <span class="strength-text">Password Strength: <strong>{{ strengthLabel() }}</strong></span>
+    </div>
+
+    <!-- Confirm Password Field -->
+    <label class="form-field">
+      <span>Confirm Password</span>
+      <div class="password-input-wrapper">
+        <input 
+          [type]="showConfirmPassword() ? 'text' : 'password'" 
+          formControlName="confirmPassword" 
+          placeholder="••••••••"
+          [class.invalid]="registerForm.controls.confirmPassword.touched && registerForm.controls.confirmPassword.invalid"
+        />
+        <button 
+          type="button" 
+          class="password-toggle-btn"
+          (click)="showConfirmPassword.set(!showConfirmPassword())"
+          [title]="showConfirmPassword() ? 'Hide Password' : 'Show Password'"
+        >
+          <span>{{ showConfirmPassword() ? '👁️' : '🔒' }}</span>
+        </button>
+      </div>
+      <span class="error" *ngIf="registerForm.controls.confirmPassword.touched && registerForm.errors?.['mustMatch']">
+        Passwords do not match.
+      </span>
+    </label>
+
+    <!-- Role Selection -->
+    <label class="form-field">
+      <span>Registration Role</span>
+      <select formControlName="role">
+        <option value="Customer">Customer</option>
+        <option value="Seller">Seller</option>
+        <option value="Admin">Admin</option>
+      </select>
+    </label>
+
+    <!-- Terms Option -->
+    <div class="terms-option">
+      <label class="checkbox-container">
+        <input type="checkbox" formControlName="acceptTerms" />
+        <span class="checkmark"></span>
+        I accept the Terms and Conditions
+      </label>
+      <span class="error" *ngIf="registerForm.controls.acceptTerms.touched && registerForm.controls.acceptTerms.invalid">
+        You must accept terms to proceed.
+      </span>
+    </div>
+
+    <!-- Submit Button -->
+    <button class="primary" type="submit" [disabled]="loading() || registerForm.invalid">
+      <span *ngIf="loading()">Creating account...</span>
+      <span *ngIf="!loading()">Create Account</span>
+    </button>
+
+    <div class="auth-switch">
+      <span>Already have an account? </span>
+      <a routerLink="/auth/login">Sign In</a>
+    </div>
+  </form>
+</section>

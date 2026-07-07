@@ -1,0 +1,63 @@
+.status-pill {
+  &[data-status="Shipment Created"], &[data-status="Pickup Scheduled"] {
+    background-color: #fff3e0;
+    color: #ef6c00;
+  }
+  &[data-status="Picked Up"], &[data-status="In Transit"], &[data-status="At Local Hub"] {
+    background-color: #e1f5fe;
+    color: #0288d1;
+  }
+  &[data-status="Out For Delivery"] {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+  &[data-status="Delivered"] {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  &[data-status="Delivery Failed"], &[data-status="Returned To Sender"] {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  &[data-status="Delivery Rescheduled"] {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+  }
+}
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog-box {
+  background: white;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.progress-step {
+  .circle {
+    box-shadow: 0 0 0 4px #fff;
+    transition: all 0.3s ease;
+  }
+}

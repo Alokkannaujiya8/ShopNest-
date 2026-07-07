@@ -37,4 +37,25 @@ public sealed class CloudinaryImageStorageService(IOptions<CloudinarySettings> o
 
         return new AppImageUploadResult(result.SecureUrl.ToString(), result.PublicId);
     }
+
+    public async Task DeleteAsync(string publicId, CancellationToken cancellationToken = default)
+    {
+        var settings = options.Value;
+        if (string.IsNullOrWhiteSpace(settings.CloudName))
+        {
+            if (string.IsNullOrWhiteSpace(publicId)) return;
+            
+            // local file path fallback
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", publicId.TrimStart('/'));
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+            await Task.CompletedTask;
+            return;
+        }
+
+        var cloudinary = new Cloudinary(new Account(settings.CloudName, settings.ApiKey, settings.ApiSecret));
+        await cloudinary.DestroyAsync(new DeletionParams(publicId));
+    }
 }

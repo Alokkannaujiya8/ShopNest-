@@ -1,0 +1,18 @@
+.status-pill {
+  &[data-status="Pending"] {
+    background-color: #fff3e0;
+    color: #ef6c00;
+  }
+  &[data-status="Approved"] {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+  &[data-status="Rejected"] {
+    background-color: #fffeeb;
+    color: #e53935;
+  }
+  &[data-status="Hidden"] {
+    background-color: #eceff1;
+    color: #37474f;
+  }
+}

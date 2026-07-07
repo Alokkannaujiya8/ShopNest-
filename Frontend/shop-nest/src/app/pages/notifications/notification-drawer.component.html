@@ -1,0 +1,70 @@
+<div class="drawer-backdrop" *ngIf="isOpen" (click)="onClose()"></div>
+
+<div class="notification-drawer" [class.open]="isOpen">
+  <div class="drawer-header">
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <h3 style="margin: 0; color: #222; font-size: 1.25rem;">Notifications</h3>
+      <span class="unread-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <button class="ghost small" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; color: #1976d2;" *ngIf="unreadCount > 0" (click)="markAllAsRead()">
+        Mark all read
+      </button>
+      <button class="close-btn" (click)="onClose()">×</button>
+    </div>
+  </div>
+
+  <div class="drawer-content">
+    <div class="loading-spinner" *ngIf="loading">Loading notifications...</div>
+    
+    <div class="notification-list" *ngIf="!loading && notifications.length > 0">
+      <div 
+        class="notification-item" 
+        *ngFor="let item of notifications" 
+        [class.unread]="!item.isRead"
+        (click)="markAsRead(item)">
+        
+        <div style="display: flex; gap: 0.75rem; align-items: start;">
+          <!-- Notification type icon/indicator -->
+          <div class="type-indicator" [attr.data-type]="item.notificationType">
+            <span *ngIf="item.notificationType === 'Success'">✓</span>
+            <span *ngIf="item.notificationType === 'Warning'">⚠️</span>
+            <span *ngIf="item.notificationType === 'Error'">❌</span>
+            <span *ngIf="item.notificationType === 'Promotion'">🎁</span>
+            <span *ngIf="item.notificationType === 'Information'">ℹ️</span>
+          </div>
+
+          <div style="flex-grow: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+              <h4 style="margin: 0; font-size: 0.95rem; color: #222; font-weight: bold;">{{ item.title }}</h4>
+              <span class="dot" *ngIf="!item.isRead"></span>
+            </div>
+            
+            <p style="margin: 0.25rem 0 0.5rem 0; font-size: 0.85rem; color: #555; line-height: 1.4;">
+              {{ item.message }}
+            </p>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #888;">
+              <span>{{ item.sentTime | date:'short' }}</span>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="link-btn" style="color: #e53935;" (click)="$event.stopPropagation(); deleteNotification(item.id)">
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" *ngIf="!loading && notifications.length === 0">
+      <span style="font-size: 3rem; margin-bottom: 1rem; display: block;">🔔</span>
+      <h4>All Caught Up!</h4>
+      <p style="color: #777; font-size: 0.85rem; max-width: 200px; margin: 0.25rem auto 0 auto;">
+        You don't have any notifications right now.
+      </p>
+    </div>
+  </div>
+</div>

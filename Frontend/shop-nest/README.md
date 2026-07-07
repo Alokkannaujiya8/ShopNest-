@@ -1,59 +1,53 @@
-# ShopNest
+# ShopNest Enterprise Frontend Application
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.8.
+ShopNest is an enterprise-grade e-commerce application powered by **Angular 20** and integrated with a high-performance **ASP.NET Core Web API** backend.
 
-## Development server
+---
 
-To start a local development server, run:
+## 🛠️ Project Architecture
 
+The architecture is built following modular Angular practices:
+- **Core Module (`src/app/core/`)**: Holds singleton services, state management, interceptors, routing guards, and models.
+- **Shared Module (`src/app/shared/`)**: Holds reusable components (Loader, Toast, Breadcrumbs, etc.).
+- **Pages Module (`src/app/pages/`)**: Contains modular components for individual application screens (Catalog, Cart, Wishlist, Profile, Notifications, Admin panels).
+
+---
+
+## ⚙️ Environment Configuration
+
+The application interfaces with the backend services through configurations located in:
+- Base API Endpoint: `https://localhost:7002/api`
+- Real-time SignalR Hubs: `https://localhost:7002/hubs/orders`
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+- **Node.js**: v20.x or higher
+- **Angular CLI**: v20.x
+
+### 2. Installation
+Install project dependencies:
 ```bash
-ng serve
+npm install
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+### 3. Running Development Server
+Start the local server:
 ```bash
-ng generate component component-name
+npm run start
+```
+Navigate to `http://localhost:4200/` in your browser.
+
+### 4. Production Compilation
+Compile optimized production assets:
+```bash
+npm run build
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+---
 
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## 🧪 Testing Verification
+- **Unit Testing**: Run `npm run test` (Karma + Jasmine runner) to verify application logic.
+- **E2E Testing**: Configure Playwright or run `ng e2e` tests to validate customer checkout and admin dashboard flows.

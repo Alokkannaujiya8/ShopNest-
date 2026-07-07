@@ -13,4 +13,5 @@ public sealed class Payment : BaseEntity
     public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
     public decimal Amount { get; set; }
     public string Currency { get; set; } = "inr";
+    public List<PaymentTransaction> Transactions { get; set; } = [];
 }

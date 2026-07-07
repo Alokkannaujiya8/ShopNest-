@@ -153,8 +153,8 @@ export class AuthEffects {
       ofType(login),
       mergeMap(({ email, password }) =>
         this.api.login(email, password).pipe(
-          map((user) => loginSuccess({ user })),
-          catchError((err) => of(loginFailure({ error: err.error?.error || 'Login failed.' })))
+          map((res) => loginSuccess({ user: res.data! })),
+          catchError((err) => of(loginFailure({ error: err.error?.errors?.[0] || 'Login failed.' })))
         )
       )
     )
@@ -164,9 +164,9 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(registerUser),
       mergeMap(({ fullName, email, password, role }) =>
-        this.api.register(fullName, email, password, role).pipe(
-          map((user) => registerSuccess({ user })),
-          catchError((err) => of(registerFailure({ error: err.error?.error || 'Registration failed.' })))
+        this.api.register({ fullName, email, mobileNumber: '', password, confirmPassword: password, acceptTerms: true, role }).pipe(
+          map(() => registerSuccess({ user: null as any })),
+          catchError((err) => of(registerFailure({ error: err.error?.errors?.[0] || 'Registration failed.' })))
         )
       )
     )

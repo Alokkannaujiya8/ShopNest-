@@ -5,6 +5,16 @@
   </div>
 </section>
 
+<section class="panel" style="margin-bottom: 1.5rem; padding: 1rem; display: flex; gap: 1rem; font-size: 0.95rem; flex-wrap: wrap;">
+  <strong>Quick Links:</strong>
+  <a routerLink="/admin/products" style="text-decoration: underline; color: #0d47a1; font-weight: bold;">Product Management</a> |
+  <a routerLink="/admin/inventory" style="text-decoration: underline; color: #0d47a1; font-weight: bold;">Inventory Management</a> |
+  <a routerLink="/admin/categories" style="text-decoration: underline; color: #0d47a1; font-weight: bold;">Category Management</a> |
+  <a routerLink="/admin/users" style="text-decoration: underline; color: #0d47a1; font-weight: bold;">User Management</a> |
+  <a routerLink="/admin/roles" style="text-decoration: underline; color: #0d47a1; font-weight: bold;">Role Management</a> |
+  <a routerLink="/admin/reports" style="text-decoration: underline; color: #2e7d32; font-weight: bold;">Reports & Analytics</a>
+</section>
+
 <section class="stats">
   <article class="stat"><span>Customers</span><strong>{{ stats?.customers || 0 }}</strong></article>
   <article class="stat"><span>Products</span><strong>{{ stats?.products || 0 }}</strong></article>

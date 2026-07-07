@@ -1,0 +1,164 @@
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Administration</p>
+    <h1>Product Management</h1>
+  </div>
+  <div style="display: flex; gap: 0.75rem;">
+    <button class="primary" (click)="navigateToCreate()">
+      <span class="icon">+</span> New Product
+    </button>
+  </div>
+</section>
+
+<section class="panel" style="margin-bottom: 1.5rem; padding: 1rem; display: flex; gap: 1rem; font-size: 0.95rem; flex-wrap: wrap;">
+  <strong>Quick Links:</strong>
+  <a routerLink="/admin/products" style="text-decoration: underline; color: #0d47a1; font-weight: bold;">Product Management</a> |
+  <a routerLink="/admin/inventory" style="text-decoration: underline; color: #0d47a1; font-weight: bold;">Inventory Management</a> |
+  <a routerLink="/admin/categories" style="text-decoration: underline; color: #0d47a1; font-weight: bold;">Category Management</a> |
+  <a routerLink="/admin/users" style="text-decoration: underline; color: #0d47a1; font-weight: bold;">User Management</a> |
+  <a routerLink="/admin/roles" style="text-decoration: underline; color: #0d47a1; font-weight: bold;">Role Management</a> |
+  <a routerLink="/admin/reports" style="text-decoration: underline; color: #2e7d32; font-weight: bold;">Reports & Analytics</a>
+</section>
+
+<!-- Notices -->
+<p class="notice success" *ngIf="notice">{{ notice }}</p>
+<p class="notice error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+<!-- Filters Panel -->
+<section class="filters-panel panel">
+  <div class="filter-inputs">
+    <div class="search-box">
+      <input type="text" [(ngModel)]="search" placeholder="Search by name, SKU, barcode..." (keyup.enter)="onSearch()" />
+      <button class="primary" (click)="onSearch()">Search</button>
+    </div>
+
+    <div class="select-box">
+      <label>Stock Status</label>
+      <select [(ngModel)]="filterStockStatus" (change)="onSearch()">
+        <option value="">All Stock</option>
+        <option value="InStock">In Stock</option>
+        <option value="OutOfStock">Out of Stock</option>
+        <option value="LowStock">Low Stock</option>
+      </select>
+    </div>
+
+    <div class="select-box">
+      <label>Active</label>
+      <select [(ngModel)]="filterActive" (change)="onSearch()">
+        <option value="">All Statuses</option>
+        <option value="true">Active Only</option>
+        <option value="false">Inactive Only</option>
+      </select>
+    </div>
+
+    <div class="select-box">
+      <label>Published</label>
+      <select [(ngModel)]="filterPublished" (change)="onSearch()">
+        <option value="">All Published</option>
+        <option value="true">Published</option>
+        <option value="false">Unpublished</option>
+      </select>
+    </div>
+
+    <div class="select-box">
+      <label>Featured</label>
+      <select [(ngModel)]="filterFeatured" (change)="onSearch()">
+        <option value="">All Featured</option>
+        <option value="true">Featured</option>
+        <option value="false">Not Featured</option>
+      </select>
+    </div>
+
+    <div class="select-box">
+      <label>Soft Deleted</label>
+      <select [(ngModel)]="filterDeleted" (change)="onSearch()">
+        <option value="false">Active Only</option>
+        <option value="true">Trash/Deleted Only</option>
+      </select>
+    </div>
+
+    <div>
+      <button class="ghost" style="margin-top: 1.5rem;" (click)="clearFilters()">Clear Filters</button>
+    </div>
+  </div>
+</section>
+
+<!-- Table Grid -->
+<section class="panel table-panel">
+  <h2>Products Grid ({{ totalCount }})</h2>
+
+  <div class="table-container">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Name</th>
+          <th>SKU / Barcode</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Status</th>
+          <th>Tags</th>
+          <th class="actions-header">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of products">
+          <td>
+            <div class="img-preview-cell">
+              <!-- Get primary image -->
+              <img *ngIf="p.images && p.images.length > 0" [src]="p.images[0].url" alt="icon" class="table-img" />
+              <span *ngIf="!p.images || p.images.length === 0" class="table-no-img">{{ p.name.charAt(0) }}</span>
+            </div>
+          </td>
+          <td class="bold-text">
+            <div>{{ p.name }}</div>
+            <div style="font-size: 0.75rem; color: #666; font-weight: normal;">Slug: {{ p.slug }}</div>
+          </td>
+          <td>
+            <span class="code-font">{{ p.sku }}</span>
+            <div *ngIf="p.barcode" style="font-size: 0.75rem; color: #888;">UPC: {{ p.barcode }}</div>
+          </td>
+          <td>{{ p.category?.name || 'Unassigned' }}</td>
+          <td class="bold-text">${{ p.price | number:'1.2-2' }}</td>
+          <td>
+            <span class="status-badge" [class.active]="p.stockQuantity > 0" [class.inactive]="p.stockQuantity === 0">
+              {{ p.stockQuantity }} ({{ p.stockStatus }})
+            </span>
+          </td>
+          <td>
+            <span class="status-badge" [class.active]="p.isActive" [class.inactive]="!p.isActive" (click)="toggleActive(p)" style="cursor: pointer; margin-right: 0.25rem;">
+              {{ p.isActive ? 'Active' : 'Inactive' }}
+            </span>
+            <span class="status-badge featured" [class.active]="p.isPublished" [class.inactive]="!p.isPublished" (click)="togglePublish(p)" style="cursor: pointer;">
+              {{ p.isPublished ? 'Published' : 'Draft' }}
+            </span>
+          </td>
+          <td>
+            <span class="status-badge featured" style="margin-right: 0.25rem;" *ngIf="p.isFeatured">Featured</span>
+            <span class="status-badge active" style="margin-right: 0.25rem; background-color: #e3f2fd; color: #0d47a1;" *ngIf="p.isNewArrival">New</span>
+            <span class="status-badge active" style="background-color: #fff3e0; color: #e65100;" *ngIf="p.isBestSeller">Best Seller</span>
+          </td>
+          <td class="actions compact">
+            <button class="ghost" (click)="navigateToEdit(p.id)">Edit</button>
+            <button class="ghost" (click)="duplicateProduct(p)">Copy</button>
+            <button class="ghost" style="color: #d32f2f;" *ngIf="!p.isDeleted" (click)="deleteProduct(p)">Delete</button>
+            <button class="ghost" style="color: #2e7d32;" *ngIf="p.isDeleted" (click)="restoreProduct(p)">Restore</button>
+          </td>
+        </tr>
+        <tr *ngIf="products.length === 0">
+          <td colspan="9" style="text-align: center; padding: 2rem; color: #777;">
+            No products found matching filters.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button class="ghost" [disabled]="page === 1" (click)="changePage(page - 1)">Previous</button>
+    <span class="pages-indicator">Page {{ page }} of {{ totalPages }}</span>
+    <button class="ghost" [disabled]="page === totalPages" (click)="changePage(page + 1)">Next</button>
+  </div>
+</section>

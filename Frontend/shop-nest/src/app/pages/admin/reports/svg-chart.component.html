@@ -1,0 +1,129 @@
+<div class="chart-wrapper">
+  <!-- Line / Area Chart -->
+  <svg 
+    *ngIf="chartType === 'line' || chartType === 'area' || chartType === 'bar'" 
+    [attr.viewBox]="'0 0 ' + width + ' ' + height" 
+    class="svg-element">
+    
+    <!-- Gridlines & Y-axis labels -->
+    <g class="grid-lines">
+      <line 
+        *ngFor="let y of gridLines" 
+        [attr.x1]="paddingLeft" 
+        [attr.y1]="y" 
+        [attr.x2]="width - paddingRight" 
+        [attr.y2]="y" 
+        class="grid-line"></line>
+    </g>
+
+    <!-- Axes -->
+    <line 
+      [attr.x1]="paddingLeft" 
+      [attr.y1]="height - paddingBottom" 
+      [attr.x2]="width - paddingRight" 
+      [attr.y2]="height - paddingBottom" 
+      class="axis-line"></line>
+    <line 
+      [attr.x1]="paddingLeft" 
+      [attr.y1]="paddingTop" 
+      [attr.x2]="paddingLeft" 
+      [attr.y2]="height - paddingBottom" 
+      class="axis-line"></line>
+
+    <!-- X labels -->
+    <text 
+      *ngFor="let xl of xLabels" 
+      [attr.x]="xl.x" 
+      [attr.y]="height - paddingBottom + 20" 
+      class="axis-text x-label">{{ xl.text }}</text>
+
+    <!-- Y labels -->
+    <text 
+      *ngFor="let yl of yLabels" 
+      [attr.x]="paddingLeft - 10" 
+      [attr.y]="yl.y" 
+      class="axis-text y-label">{{ yl.val }}</text>
+
+    <!-- Area Fill (if Area Chart) -->
+    <path 
+      *ngIf="chartType === 'area' && areaPath" 
+      [attr.d]="areaPath" 
+      [attr.fill]="color" 
+      class="area-fill"></path>
+
+    <!-- Line Path -->
+    <path 
+      *ngIf="(chartType === 'line' || chartType === 'area') && linePath" 
+      [attr.d]="linePath" 
+      [attr.stroke]="color" 
+      class="chart-line"></path>
+
+    <!-- Interactive Data Circles (for Line/Area) -->
+    <g *ngIf="chartType === 'line' || chartType === 'area'">
+      <circle 
+        *ngFor="let pt of points" 
+        [attr.cx]="pt.x" 
+        [attr.cy]="pt.y" 
+        r="5" 
+        [attr.fill]="color" 
+        class="data-circle"
+        (mouseenter)="showTooltip(pt, $event)"
+        (mouseleave)="hideTooltip()"></circle>
+    </g>
+
+    <!-- Bar Rects (if Bar Chart) -->
+    <g *ngIf="chartType === 'bar'">
+      <rect 
+        *ngFor="let br of bars" 
+        [attr.x]="br.x" 
+        [attr.y]="br.y" 
+        [attr.width]="br.width" 
+        [attr.height]="br.height" 
+        [attr.fill]="br.color" 
+        rx="3" 
+        ry="3"
+        class="bar-rect"
+        (mouseenter)="showTooltip(br, $event)"
+        (mouseleave)="hideTooltip()"></rect>
+    </g>
+  </svg>
+
+  <!-- Pie / Doughnut Chart -->
+  <svg 
+    *ngIf="chartType === 'pie' || chartType === 'doughnut'" 
+    viewBox="0 0 400 400" 
+    class="svg-element pie-svg">
+    
+    <g>
+      <path 
+        *ngFor="let sl of slices" 
+        [attr.d]="sl.path" 
+        [attr.fill]="sl.color" 
+        class="pie-slice"
+        (mouseenter)="showTooltip(sl, $event)"
+        (mouseleave)="hideTooltip()"></path>
+    </g>
+
+    <!-- Text percentages on large slices -->
+    <g>
+      <ng-container *ngFor="let sl of slices">
+        <text 
+          *ngIf="sl.percentage > 5"
+          [attr.x]="sl.textX" 
+          [attr.y]="sl.textY" 
+          class="pie-slice-label">{{ sl.percentage | number:'1.0-0' }}%</text>
+      </ng-container>
+    </g>
+  </svg>
+
+  <!-- Floating Hover Tooltip -->
+  <div 
+    class="chart-tooltip" 
+    *ngIf="hoveredItem">
+    <div class="tooltip-label">{{ hoveredItem.label }}</div>
+    <div class="tooltip-value">
+      {{ hoveredItem.value | currency:'USD' }}
+      <span *ngIf="hoveredItem.percentage !== undefined">({{ hoveredItem.percentage | number:'1.1-1' }}%)</span>
+    </div>
+  </div>
+</div>

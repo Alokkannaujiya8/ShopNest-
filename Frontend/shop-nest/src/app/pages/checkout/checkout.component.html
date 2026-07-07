@@ -1,0 +1,251 @@
+<div class="wishlist-page-container">
+
+  <!-- Notice Banners -->
+  <p class="notice success" *ngIf="notice">{{ notice }}</p>
+  <p class="notice error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+  <!-- Checkout Success View -->
+  <section class="panel empty-state" *ngIf="checkoutSuccess" style="text-align: center; padding: 5rem; margin-top: 1.5rem;">
+    <div style="font-size: 5rem; color: #2e7d32; margin-bottom: 1.5rem;">🎉</div>
+    <h2>Order Placed Successfully!</h2>
+    <p style="color: #666; max-width: 450px; margin: 0.5rem auto 1.5rem auto;">
+      Thank you for your purchase! Your order number is <strong class="code-font" style="color: #0d47a1;">{{ placedOrder?.orderNumber }}</strong>.
+    </p>
+    <div class="panel" style="max-width: 500px; margin: 1.5rem auto; text-align: left; padding: 1rem; font-size: 0.9rem;">
+      <h4 style="margin-top: 0;">Shipping to:</h4>
+      <pre style="white-space: pre-wrap; font-family: inherit; margin: 0; color: #555;">{{ placedOrder?.shippingAddress }}</pre>
+    </div>
+    <button class="primary" routerLink="/orders">Track My Order</button>
+  </section>
+
+  <!-- Checkout Flow View -->
+  <div *ngIf="!checkoutSuccess">
+    <section class="page-head">
+      <div>
+        <p class="eyebrow">Secure Checkout</p>
+        <h1>Complete Your Purchase</h1>
+      </div>
+    </section>
+
+    <!-- Loader -->
+    <div class="loader-wrapper" *ngIf="loading" style="text-align: center; padding: 5rem;">
+      <div class="spinner"></div>
+      <p style="margin-top: 1rem; color: #666; font-weight: bold;">Loading checkout details...</p>
+    </div>
+
+    <!-- Main Checkout Split Layout -->
+    <section class="split-layout" *ngIf="!loading" style="display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; margin-top: 1.5rem;">
+      
+      <!-- Left side: Addresses, Shipping & Payment Selection -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+        <!-- Step 1: Address Selection -->
+        <div class="panel" style="padding: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0;">1. Delivery Address</h3>
+            <button class="ghost" *ngIf="!showAddressForm" (click)="openAddAddress()">+ Add New Address</button>
+          </div>
+
+          <!-- Address Form -->
+          <div class="panel" style="background-color: #fafafa; border: 1px solid #ddd; padding: 1.25rem; margin-bottom: 1rem;" *ngIf="showAddressForm">
+            <h4 style="margin-top: 0;">{{ editingAddress ? 'Edit Address' : 'Add New Address' }}</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+              <div>
+                <label>Full Name *</label>
+                <input type="text" [(ngModel)]="addressFullName" placeholder="e.g. John Doe" />
+              </div>
+              <div>
+                <label>Mobile Number *</label>
+                <input type="text" [(ngModel)]="addressMobile" placeholder="10-digit number" />
+              </div>
+              <div>
+                <label>Alternate Mobile</label>
+                <input type="text" [(ngModel)]="addressAltMobile" placeholder="Optional" />
+              </div>
+              <div>
+                <label>Email Address</label>
+                <input type="email" [(ngModel)]="addressEmail" placeholder="Optional" />
+              </div>
+              <div>
+                <label>Address Line 1 *</label>
+                <input type="text" [(ngModel)]="addressLine1" placeholder="Flat, House no., Building" />
+              </div>
+              <div>
+                <label>Address Line 2</label>
+                <input type="text" [(ngModel)]="addressLine2" placeholder="Area, Colony, Street" />
+              </div>
+              <div>
+                <label>City *</label>
+                <input type="text" [(ngModel)]="addressCity" />
+              </div>
+              <div>
+                <label>State *</label>
+                <input type="text" [(ngModel)]="addressState" />
+              </div>
+              <div>
+                <label>Postal Code *</label>
+                <input type="text" [(ngModel)]="addressPostalCode" placeholder="6-digit ZIP code" />
+              </div>
+              <div>
+                <label>Address Type</label>
+                <select [(ngModel)]="addressType">
+                  <option value="Home">Home Address</option>
+                  <option value="Office">Office Address</option>
+                  <option value="Other">Other Address</option>
+                </select>
+              </div>
+            </div>
+            
+            <div style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <input type="checkbox" id="isDefault" [(ngModel)]="addressIsDefault" />
+              <label for="isDefault" style="cursor: pointer; font-size: 0.9rem;">Set as default address</label>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem;">
+              <button class="ghost" (click)="showAddressForm = false">Cancel</button>
+              <button class="primary" (click)="saveAddress()">Save Address</button>
+            </div>
+          </div>
+
+          <!-- Addresses list cards -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;" *ngIf="!showAddressForm">
+            <div class="panel address-card" *ngFor="let addr of addresses" 
+                 [style.border-color]="selectedAddressId === addr.id ? '#0d47a1' : '#ddd'"
+                 [style.background-color]="selectedAddressId === addr.id ? '#f0f4c3' : 'white'"
+                 style="position: relative; border-width: 2px; border-style: solid; padding: 1rem; border-radius: 6px; cursor: pointer;"
+                 (click)="selectedAddressId = addr.id; onAddressChange()">
+              
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <span class="status-badge" style="background-color: #555; color: white; font-size: 0.7rem; padding: 0.15rem 0.35rem; border-radius: 4px;">
+                  {{ addr.addressType }}
+                </span>
+                <span class="status-badge active" style="font-size: 0.7rem; padding: 0.15rem 0.35rem;" *ngIf="addr.isDefault">Default</span>
+              </div>
+              
+              <h4 style="margin: 0.5rem 0 0.25rem 0;">{{ addr.fullName }}</h4>
+              <p style="margin: 0; font-size: 0.85rem; color: #555;">{{ addr.addressLine1 }}, {{ addr.addressLine2 }}</p>
+              <p style="margin: 0; font-size: 0.85rem; color: #555;">{{ addr.area }}, {{ addr.city }}, {{ addr.state }} - {{ addr.postalCode }}</p>
+              <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; font-weight: bold;">Phone: {{ addr.mobileNumber }}</p>
+
+              <!-- Address Actions -->
+              <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;" (click)="$event.stopPropagation()">
+                <button class="ghost" style="padding: 0.15rem 0.5rem; font-size: 0.8rem;" (click)="openEditAddress(addr)">Edit</button>
+                <button class="ghost" style="border-color: #d32f2f; color: #d32f2f; padding: 0.15rem 0.5rem; font-size: 0.8rem;" (click)="deleteAddress(addr.id)">Delete</button>
+                <button class="ghost" style="padding: 0.15rem 0.5rem; font-size: 0.8rem;" *ngIf="!addr.isDefault" (click)="setDefaultAddress(addr.id)">Set Default</button>
+              </div>
+            </div>
+          </div>
+          <p class="muted" *ngIf="addresses.length === 0 && !showAddressForm">
+            No delivery addresses saved. Please add a new address above.
+          </p>
+        </div>
+
+        <!-- Step 2: Shipping & Payment Method Selection -->
+        <div class="panel" style="padding: 1.5rem;">
+          <h3 style="margin-top: 0; margin-bottom: 1rem;">2. Shipping & Payment Methods</h3>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <!-- Shipping Methods -->
+            <div>
+              <h4 style="margin-top: 0;">Shipping Method</h4>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem;">
+                <label *ngFor="let s of shippingMethods" class="panel" style="display: flex; gap: 0.75rem; align-items: center; padding: 0.75rem; border-radius: 6px; cursor: pointer; margin: 0;" [style.border-color]="selectedShippingCode === s.code ? '#0d47a1' : '#ddd'">
+                  <input type="radio" name="shippingMethod" [value]="s.code" [(ngModel)]="selectedShippingCode" (change)="recalculate()" />
+                  <div style="flex-grow: 1;">
+                    <div style="font-weight: bold;">{{ s.name }} ({{ s.cost > 0 ? '$' + s.cost : 'FREE' }})</div>
+                    <div style="font-size: 0.8rem; color: #666;">{{ s.description }}</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Payment Methods -->
+            <div>
+              <h4 style="margin-top: 0;">Payment Method</h4>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem;">
+                <label *ngFor="let p of paymentMethods" class="panel" style="display: flex; gap: 0.75rem; align-items: center; padding: 0.75rem; border-radius: 6px; cursor: pointer; margin: 0;" [style.border-color]="selectedPaymentMethod === p ? '#0d47a1' : '#ddd'">
+                  <input type="radio" name="paymentMethod" [value]="p" [(ngModel)]="selectedPaymentMethod" (change)="recalculate()" />
+                  <div style="flex-grow: 1;">
+                    <div style="font-weight: bold;">{{ p === 'Stripe' ? 'Credit / Debit Card (Stripe)' : 'Cash on Delivery (COD)' }}</div>
+                    <div style="font-size: 0.8rem; color: #666;">{{ p === 'Stripe' ? 'Secure instant card payment' : 'Pay at your door steps' }}</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Order Review & Notes -->
+        <div class="panel" style="padding: 1.5rem;">
+          <h3 style="margin-top: 0; margin-bottom: 1rem;">3. Delivery Instructions & Notes</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <label style="font-weight: bold; font-size: 0.9rem; display: block; margin-bottom: 0.35rem;">Delivery Instructions</label>
+              <textarea [(ngModel)]="deliveryInstructions" placeholder="e.g. Leave at front desk or Ring bell twice..." rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+            </div>
+            <div>
+              <label style="font-weight: bold; font-size: 0.9rem; display: block; margin-bottom: 0.35rem;">Order Notes</label>
+              <textarea [(ngModel)]="orderNotes" placeholder="Any special notes or requirements..." rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right side: Sticky Checkout Summary Card -->
+      <div class="summary-card">
+        <div class="panel" style="padding: 1.5rem; position: sticky; top: 1.5rem;">
+          <h2 style="margin-top: 0;">Order Review</h2>
+
+          <!-- Items list snippet -->
+          <div class="cart-items-preview" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
+            <div *ngFor="let item of cart?.items" style="display: flex; gap: 0.5rem; align-items: center; font-size: 0.85rem;">
+              <img [src]="image(item)" style="width: 36px; height: 36px; object-fit: cover; border-radius: 4px;" alt="Product preview" />
+              <div style="flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                {{ item.productName }}
+              </div>
+              <div style="font-weight: bold;">x{{ item.quantity }}</div>
+            </div>
+          </div>
+
+          <!-- Breakdown -->
+          <div class="summary-rows" style="display: flex; flex-direction: column; gap: 0.75rem; margin: 1.25rem 0; font-size: 0.95rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <span>Subtotal</span>
+              <span>${{ subtotal | number:'1.2-2' }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: #2e7d32;" *ngIf="discount > 0">
+              <span>Discounts</span>
+              <span>-${{ discount | number:'1.2-2' }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>Shipping Charges</span>
+              <span>{{ shippingCost > 0 ? '$' + (shippingCost | number:'1.2-2') : 'FREE' }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>Estimated Tax (10%)</span>
+              <span>${{ tax | number:'1.2-2' }}</span>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 0.5rem 0;" />
+            <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem; color: #0d47a1;">
+              <span>Grand Total</span>
+              <span>${{ grandTotal | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <div style="text-align: center; margin-top: 0.5rem;" *ngIf="validating">
+            <span style="font-size: 0.8rem; color: #777;">Recalculating totals...</span>
+          </div>
+
+          <button class="primary" style="width: 100%; padding: 0.75rem; margin-top: 1rem;" 
+                  [disabled]="!selectedAddressId || !selectedShippingCode || !selectedPaymentMethod || placingOrder || validating"
+                  (click)="placeOrder()">
+            {{ placingOrder ? 'Placing Order...' : 'Place Order & Pay' }}
+          </button>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+</div>

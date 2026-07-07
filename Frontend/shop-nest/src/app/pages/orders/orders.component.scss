@@ -1,21 +1,71 @@
-:host {
-  display: block;
+.status-pill {
+  &[data-status="Pending"], &[data-status="PaymentPending"] {
+    background-color: #ffe0b2;
+    color: #e65100;
+  }
+  &[data-status="Confirmed"], &[data-status="PaymentCompleted"], &[data-status="Processing"] {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+  &[data-status="Packed"], &[data-status="ReadyToShip"] {
+    background-color: #e1f5fe;
+    color: #0288d1;
+  }
+  &[data-status="Shipped"], &[data-status="OutForDelivery"] {
+    background-color: #e0f2f1;
+    color: #00796b;
+  }
+  &[data-status="Delivered"] {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  &[data-status="Cancelled"] {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  &[data-status="ReturnRequested"], &[data-status="RefundRequested"] {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+  }
+  &[data-status="Returned"], &[data-status="Refunded"] {
+    background-color: #cfd8dc;
+    color: #37474f;
+  }
 }
 
-.order-card {
-  overflow: hidden;
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
 
-.status {
-  justify-self: end;
+.dialog-box {
+  background: white;
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.steps {
-  margin: 0.25rem 0;
+@keyframes slideIn {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
-@media (max-width: 640px) {
-  .status {
-    justify-self: start;
+.progress-step {
+  .circle {
+    box-shadow: 0 0 0 4px #fff;
+    transition: all 0.3s ease;
   }
 }

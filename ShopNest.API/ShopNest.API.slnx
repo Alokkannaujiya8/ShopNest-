@@ -3,4 +3,5 @@
   <Project Path="ShopNest.Application/ShopNest.Application.csproj" />
   <Project Path="ShopNest.Domain/ShopNest.Domain.csproj" />
   <Project Path="ShopNest.Infrastructure/ShopNest.Infrastructure.csproj" />
+  <Project Path="ShopNest.Tests/ShopNest.Tests.csproj" />
 </Solution>

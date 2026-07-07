@@ -1,0 +1,321 @@
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Product Management</p>
+    <h1>{{ isEditMode ? 'Edit Product: ' + productName : 'Create New Product' }}</h1>
+  </div>
+  <div>
+    <button class="ghost" (click)="cancel()">Cancel</button>
+    <button class="primary" style="margin-left: 0.75rem;" (click)="onSubmit()">Save Product</button>
+  </div>
+</section>
+
+<!-- Notices -->
+<p class="notice success" *ngIf="notice">{{ notice }}</p>
+<p class="notice error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+<div class="product-form-layout">
+  <!-- Left Side: Forms -->
+  <div class="form-container">
+    <!-- Basic Information Panel -->
+    <section class="panel">
+      <h2>Basic Information</h2>
+      <div class="form-grid">
+        <div class="form-group span-full">
+          <label>Product Name <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="form.name" placeholder="Enter product name..." required />
+        </div>
+
+        <div class="form-group">
+          <label>SKU <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="form.sku" placeholder="e.g. LAP-DELL-01" required />
+        </div>
+
+        <div class="form-group">
+          <label>Barcode</label>
+          <input type="text" [(ngModel)]="form.barcode" placeholder="e.g. 123456789" />
+        </div>
+
+        <div class="form-group span-full">
+          <label>Short Description</label>
+          <input type="text" [(ngModel)]="form.shortDescription" placeholder="Enter short highlight snippet..." />
+        </div>
+
+        <div class="form-group span-full">
+          <label>Full Description <span class="required">*</span></label>
+          <textarea rows="6" [(ngModel)]="form.description" placeholder="Enter full specifications and details..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Category ID <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="form.categoryId" placeholder="Enter Category GUID..." required />
+        </div>
+
+        <div class="form-group">
+          <label>Sub Category ID</label>
+          <input type="text" [(ngModel)]="form.subCategoryId" placeholder="Enter Sub Category GUID (optional)..." />
+        </div>
+
+        <div class="form-group">
+          <label>Brand ID</label>
+          <input type="text" [(ngModel)]="form.brandId" placeholder="Enter Brand GUID (optional)..." />
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Panel -->
+    <section class="panel">
+      <h2>Pricing & Taxation</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Cost Price ($)</label>
+          <input type="number" [(ngModel)]="form.costPrice" min="0" step="0.01" />
+        </div>
+
+        <div class="form-group">
+          <label>Selling Price ($) <span class="required">*</span></label>
+          <input type="number" [(ngModel)]="form.price" min="0" step="0.01" required />
+        </div>
+
+        <div class="form-group">
+          <label>Discount Type</label>
+          <select [(ngModel)]="form.discountType">
+            <option value="">No Discount</option>
+            <option value="Flat">Flat Price Discount</option>
+            <option value="Percentage">Percentage Discount</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Discount Value</label>
+          <input type="number" [(ngModel)]="form.discountValue" min="0" />
+        </div>
+
+        <div class="form-group">
+          <label>Discount Start Date</label>
+          <input type="date" [(ngModel)]="form.discountStartDate" />
+        </div>
+
+        <div class="form-group">
+          <label>Discount End Date</label>
+          <input type="date" [(ngModel)]="form.discountEndDate" />
+        </div>
+
+        <div class="form-group">
+          <label>Tax Percentage (%)</label>
+          <input type="number" [(ngModel)]="form.taxPercentage" min="0" max="100" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Inventory Panel -->
+    <section class="panel">
+      <h2>Inventory Settings</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Stock Quantity <span class="required">*</span></label>
+          <input type="number" [(ngModel)]="form.stockQuantity" min="0" required />
+        </div>
+
+        <div class="form-group">
+          <label>Minimum Stock Alert</label>
+          <input type="number" [(ngModel)]="form.minimumStock" min="0" />
+        </div>
+
+        <div class="form-group">
+          <label>Maximum Stock Limit</label>
+          <input type="number" [(ngModel)]="form.maximumStock" min="0" />
+        </div>
+
+        <div class="form-group">
+          <label>Stock Status</label>
+          <select [(ngModel)]="form.stockStatus">
+            <option value="InStock">In Stock</option>
+            <option value="OutOfStock">Out of Stock</option>
+            <option value="LowStock">Low Stock</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Shipping Dimensions -->
+    <section class="panel">
+      <h2>Shipping & Dimensions</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Weight (kg)</label>
+          <input type="number" [(ngModel)]="form.weight" min="0" step="0.01" />
+        </div>
+        <div class="form-group">
+          <label>Length (cm)</label>
+          <input type="number" [(ngModel)]="form.length" min="0" step="0.01" />
+        </div>
+        <div class="form-group">
+          <label>Width (cm)</label>
+          <input type="number" [(ngModel)]="form.width" min="0" step="0.01" />
+        </div>
+        <div class="form-group">
+          <label>Height (cm)</label>
+          <input type="number" [(ngModel)]="form.height" min="0" step="0.01" />
+        </div>
+      </div>
+    </section>
+
+    <!-- SEO Meta Properties -->
+    <section class="panel">
+      <h2>SEO Meta Fields</h2>
+      <div class="form-grid">
+        <div class="form-group span-full">
+          <label>Meta Title</label>
+          <input type="text" [(ngModel)]="form.metaTitle" placeholder="SEO Title tag value..." />
+        </div>
+        <div class="form-group span-full">
+          <label>Meta Description</label>
+          <textarea rows="2" [(ngModel)]="form.metaDescription" placeholder="SEO Description tag value..."></textarea>
+        </div>
+        <div class="form-group span-full">
+          <label>Meta Keywords</label>
+          <input type="text" [(ngModel)]="form.metaKeywords" placeholder="comma-separated tags..." />
+        </div>
+      </div>
+    </section>
+
+    <!-- Marketing & Status -->
+    <section class="panel">
+      <h2>Visibility & Badges</h2>
+      <div class="form-checkbox-grid">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="form.isFeatured" />
+          <span>Featured Product</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="form.isNewArrival" />
+          <span>New Arrival Badge</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="form.isBestSeller" />
+          <span>Best Seller Badge</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="form.isActive" />
+          <span>Is Active (Enable searches)</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="form.isPublished" />
+          <span>Publish directly to Catalog</span>
+        </label>
+      </div>
+    </section>
+  </div>
+
+  <!-- Right Side: Gallery & Variants -->
+  <div class="sidebar-container">
+    <!-- Images Upload & Gallery -->
+    <section class="panel">
+      <h2>Product Gallery</h2>
+      
+      <!-- Existing Images -->
+      <div class="existing-gallery" *ngIf="images.length > 0">
+        <div class="gallery-item-card" *ngFor="let img of images; let i = index">
+          <img [src]="img.url" alt="preview" />
+          <div class="gallery-item-actions">
+            <span class="status-badge active" *ngIf="img.isPrimary">Primary</span>
+            <button class="ghost compact" *ngIf="!img.isPrimary" (click)="setPrimaryImage(img)">Make Primary</button>
+            <div class="order-controls">
+              <button class="ghost compact" [disabled]="i === 0" (click)="moveImageUp(i)">▲</button>
+              <button class="ghost compact" [disabled]="i === images.length - 1" (click)="moveImageDown(i)">▼</button>
+            </div>
+            <button class="ghost compact" style="color: #d32f2f;" (click)="deleteImage(img.id)">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload Controls -->
+      <div class="upload-control-box">
+        <label>Upload Image Files</label>
+        <input type="file" multiple (change)="onFileSelect($event)" accept="image/*" />
+        
+        <!-- Pending Files -->
+        <ul class="pending-files-list" *ngIf="selectedFiles.length > 0">
+          <li *ngFor="let file of selectedFiles; let idx = index">
+            <span>{{ file.name }}</span>
+            <button class="ghost compact" style="color: #d32f2f;" (click)="removePendingFile(idx)">✕</button>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Product Variants EAV -->
+    <section class="panel">
+      <h2>Variants & Attributes</h2>
+
+      <!-- List of variants -->
+      <div class="variants-list" *ngIf="form.variants.length > 0">
+        <div class="variant-item-badge" *ngFor="let v of form.variants; let idx = index">
+          <div class="variant-info">
+            <strong>{{ v.name }}</strong> ({{ v.sku }}) - Price: ${{ v.price }} | Stock: {{ v.stockQuantity }}
+            <div class="variant-attribs" *ngIf="v.attributeValues.length > 0">
+              <span class="attrib-pill" *ngFor="let av of v.attributeValues">{{ av.attributeName }}: {{ av.value }}</span>
+            </div>
+          </div>
+          <button class="ghost compact" style="color: #d32f2f;" (click)="removeVariant(idx)">Remove</button>
+        </div>
+      </div>
+
+      <!-- Add new variant card -->
+      <div class="add-variant-box">
+        <h3>Add Variant</h3>
+        
+        <div class="form-group">
+          <label>Variant Name</label>
+          <input type="text" [(ngModel)]="newVariant.name" placeholder="e.g. Size: L, Color: Red" />
+        </div>
+
+        <div class="form-group">
+          <label>SKU</label>
+          <input type="text" [(ngModel)]="newVariant.sku" placeholder="e.g. SKU-VAR-01" />
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>Price ($)</label>
+            <input type="number" [(ngModel)]="newVariant.price" min="0" step="0.01" />
+          </div>
+
+          <div class="form-group">
+            <label>Stock</label>
+            <input type="number" [(ngModel)]="newVariant.stockQuantity" min="0" />
+          </div>
+        </div>
+
+        <!-- Add Attributes values to Variant -->
+        <div class="attribute-builder">
+          <h4>Attribute Properties</h4>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Select Attribute Name</label>
+              <select [(ngModel)]="activeAttributeId">
+                <option value="">Choose Attribute...</option>
+                <option *ngFor="let attr of attributes" [value]="attr.id">{{ attr.name }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Attribute Value</label>
+              <input type="text" [(ngModel)]="activeAttributeValue" placeholder="e.g. Red, 16GB, XL" />
+            </div>
+          </div>
+          <button class="ghost compact" style="margin-top: 0.5rem;" (click)="addAttributeValue()">+ Bind Attribute</button>
+
+          <!-- Current Variant Attributes Bound -->
+          <div class="pending-attribs-display" *ngIf="newVariant.attributeValues.length > 0">
+            <div class="attrib-chip" *ngFor="let av of newVariant.attributeValues; let aIdx = index">
+              <span>{{ av.attributeName }}: {{ av.value }}</span>
+              <button class="ghost compact" (click)="removeAttributeValue(aIdx)">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="primary" style="margin-top: 1rem; width: 100%;" (click)="addVariant()">Add to Variants List</button>
+      </div>
+    </section>
+  </div>
+</div>

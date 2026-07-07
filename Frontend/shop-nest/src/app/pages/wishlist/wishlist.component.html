@@ -1,0 +1,153 @@
+<div class="wishlist-page-container">
+  
+  <section class="page-head">
+    <div>
+      <p class="eyebrow">User Profile</p>
+      <h1>My Wishlist ({{ totalCount }})</h1>
+    </div>
+    <div *ngIf="wishlistItems.length > 0">
+      <button class="ghost" style="border-color: #d32f2f; color: #d32f2f;" (click)="clearWishlist()">
+        Empty Wishlist
+      </button>
+    </div>
+  </section>
+
+  <!-- Notice Banners -->
+  <p class="notice success" *ngIf="notice">{{ notice }}</p>
+  <p class="notice error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+  <!-- Filtering & Sorting Toolbar -->
+  <section class="filters-panel panel" style="margin-top: 1.5rem;" *ngIf="wishlistItems.length > 0 || search || filterCategory || filterBrand || filterStockStatus">
+    <div class="filter-inputs" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+      <div class="search-box">
+        <input type="text" [(ngModel)]="search" placeholder="Search by name, SKU..." (keyup.enter)="onSearch()" />
+        <button class="primary" (click)="onSearch()">Search</button>
+      </div>
+
+      <div class="select-box">
+        <label>Category</label>
+        <select [(ngModel)]="filterCategory" (change)="onSearch()">
+          <option value="">All Categories</option>
+          <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+        </select>
+      </div>
+
+      <div class="select-box" *ngIf="availableBrands.length > 0">
+        <label>Brand</label>
+        <select [(ngModel)]="filterBrand" (change)="onSearch()">
+          <option value="">All Brands</option>
+          <option *ngFor="let b of availableBrands" [value]="b.id">{{ b.name }}</option>
+        </select>
+      </div>
+
+      <div class="select-box">
+        <label>Availability</label>
+        <select [(ngModel)]="filterStockStatus" (change)="onSearch()">
+          <option value="">All Stocks</option>
+          <option value="instock">In Stock</option>
+          <option value="outofstock">Out of Stock</option>
+        </select>
+      </div>
+
+      <div class="select-box">
+        <label>Sort By</label>
+        <select [(ngModel)]="sortBy" (change)="onSortChange()">
+          <option value="recentlyadded">Recently Added</option>
+          <option value="name">Name A-Z</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+        </select>
+      </div>
+
+      <div>
+        <button class="ghost" (click)="clearFilters()">Reset</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Loader wrapper -->
+  <div class="loader-wrapper" *ngIf="loading" style="text-align: center; padding: 5rem;">
+    <div class="spinner"></div>
+    <p style="margin-top: 1rem; color: #666; font-weight: bold;">Loading wishlist...</p>
+  </div>
+
+  <!-- Wishlist Table Listing -->
+  <section class="panel table-panel" style="margin-top: 1.5rem;" *ngIf="!loading && wishlistItems.length > 0">
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>SKU</th>
+            <th>Category & Brand</th>
+            <th>Stock Status</th>
+            <th>Price</th>
+            <th>Date Added</th>
+            <th class="actions-header">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of wishlistItems">
+            <td class="product-td" style="display: flex; align-items: center; gap: 1rem;">
+              <img [src]="image(item)" class="product-thumb" alt="Product Image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />
+              <div>
+                <a [routerLink]="['/catalog/product', item.productSlug]" class="bold-text" style="color: #333; text-decoration: none; font-weight: bold;">
+                  {{ item.productName }}
+                </a>
+              </div>
+            </td>
+            <td><span class="code-font">{{ item.productSku }}</span></td>
+            <td>
+              <div>{{ item.categoryName }}</div>
+              <div style="font-size: 0.75rem; color: #777;" *ngIf="item.brandName">Brand: {{ item.brandName }}</div>
+            </td>
+            <td>
+              <span class="status-badge" 
+                    [class.active]="item.stockQuantity > 0"
+                    [class.inactive]="item.stockQuantity === 0">
+                {{ item.stockQuantity > 0 ? 'In Stock' : 'Out of Stock' }}
+              </span>
+            </td>
+            <td>
+              <div style="font-weight: bold; color: #0d47a1; font-size: 1.1rem;">
+                ${{ item.price | number:'1.2-2' }}
+              </div>
+              <div class="original-price" *ngIf="item.discountValue > 0" style="text-decoration: line-through; font-size: 0.8rem; color: #999;">
+                ${{ item.originalPrice | number:'1.2-2' }}
+              </div>
+            </td>
+            <td style="font-size: 0.85rem; color: #666;">
+              {{ item.createdAtUtc | date:'mediumDate' }}
+            </td>
+            <td class="actions">
+              <button class="primary" (click)="moveToCart(item)" [disabled]="item.stockQuantity === 0">
+                Move to Cart
+              </button>
+              <button class="ghost" style="border-color: #d32f2f; color: #d32f2f;" (click)="removeFromWishlist(item)">
+                Remove
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paging -->
+    <div class="pagination" *ngIf="totalPages > 1" style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid #eee;">
+      <button class="ghost" [disabled]="page === 1" (click)="changePage(page - 1)">Previous</button>
+      <span class="pages-indicator">Page {{ page }} of {{ totalPages }}</span>
+      <button class="ghost" [disabled]="page === totalPages" (click)="changePage(page + 1)">Next</button>
+    </div>
+  </section>
+
+  <!-- Empty State Illustration -->
+  <section class="panel empty-state" *ngIf="!loading && wishlistItems.length === 0" style="text-align: center; padding: 5rem; margin-top: 1.5rem;">
+    <div style="font-size: 4rem; color: #ccc; margin-bottom: 1.5rem;">❤️</div>
+    <h2>Your Wishlist is Empty</h2>
+    <p style="color: #666; max-width: 450px; margin: 0.5rem auto 1.5rem auto;">
+      Save items you want to buy later. We'll track price changes and availability for you automatically.
+    </p>
+    <button class="primary" routerLink="/catalog">Browse ShopNest Products</button>
+  </section>
+
+</div>

@@ -1,0 +1,254 @@
+<div class="wishlist-page-container" style="max-width: 1300px; margin: 0 auto; padding: 2rem;">
+
+  <!-- Page Head -->
+  <section class="page-head" style="margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <p class="eyebrow" style="text-transform: uppercase; color: #888; letter-spacing: 1px; font-size: 0.8rem; margin: 0;">Admin Console</p>
+      <h1 style="margin: 0.25rem 0 0 0; font-size: 2.2rem; color: #222;">Notifications Dispatcher</h1>
+    </div>
+  </section>
+
+  <!-- Notices -->
+  <p class="notice success" *ngIf="notice">{{ notice }}</p>
+  <p class="notice error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+  <!-- Tabs Navigation -->
+  <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">
+    <button class="ghost" [style.borderBottom]="activeTab === 'send' ? '2px solid #1976d2' : 'none'" [style.color]="activeTab === 'send' ? '#1976d2' : '#666'" (click)="activeTab = 'send'">Send Alerts</button>
+    <button class="ghost" [style.borderBottom]="activeTab === 'templates' ? '2px solid #1976d2' : 'none'" [style.color]="activeTab === 'templates' ? '#1976d2' : '#666'" (click)="activeTab = 'templates'">Templates Manager</button>
+    <button class="ghost" [style.borderBottom]="activeTab === 'logs' ? '2px solid #1976d2' : 'none'" [style.color]="activeTab === 'logs' ? '#1976d2' : '#666'" (click)="activeTab = 'logs'">Delivery Logs</button>
+  </div>
+
+  <!-- TAB 1: SEND ALERTS -->
+  <div *ngIf="activeTab === 'send'" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;">
+    
+    <!-- Manual Dispatch Card -->
+    <div class="panel" style="padding: 2rem; border-radius: 8px;">
+      <h3 style="margin-top: 0; color: #1976d2; margin-bottom: 1.5rem;">Manual User Alert</h3>
+      
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 0.25rem;">Target User</label>
+        <select [(ngModel)]="manualTargetUserId" style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px;">
+          <option value="">Select recipient user...</option>
+          <option *ngFor="let u of users" [value]="u.id">{{ u.fullName }} ({{ u.email }})</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 0.25rem;">Notification Title</label>
+        <input type="text" placeholder="Notification summary..." [(ngModel)]="manualTitle" style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px;" />
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 0.25rem;">Notification Message</label>
+        <textarea rows="3" placeholder="Enter message contents..." [(ngModel)]="manualMessage" style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px;"></textarea>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 1.5rem;">
+        <div>
+          <label style="display: block; font-size: 0.8rem; color: #555; margin-bottom: 0.25rem;">Type</label>
+          <select [(ngModel)]="manualType" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px;">
+            <option value="Information">Information</option>
+            <option value="Success">Success</option>
+            <option value="Warning">Warning</option>
+            <option value="Error">Error</option>
+            <option value="Promotion">Promotion</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.8rem; color: #555; margin-bottom: 0.25rem;">Channel</label>
+          <select [(ngModel)]="manualChannel" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px;">
+            <option value="InApp">In-App Drawer</option>
+            <option value="Email">Email SMTP</option>
+            <option value="SMS">SMS Gateway</option>
+            <option value="Push">Push Banner</option>
+            <option value="WhatsApp">WhatsApp Message</option>
+            <option value="Telegram">Telegram Channel</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.8rem; color: #555; margin-bottom: 0.25rem;">Priority</label>
+          <select [(ngModel)]="manualPriority" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px;">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="primary" style="width: 100%; padding: 0.75rem;" (click)="sendManual()">
+        Send Personal Alert
+      </button>
+    </div>
+
+    <!-- Broadcast Card -->
+    <div class="panel" style="padding: 2rem; border-radius: 8px;">
+      <h3 style="margin-top: 0; color: #388e3c; margin-bottom: 1.5rem;">Broadcast Global Alert</h3>
+      
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 0.25rem;">Notification Title</label>
+        <input type="text" placeholder="Global notification summary..." [(ngModel)]="broadcastTitle" style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px;" />
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 0.25rem;">Notification Message</label>
+        <textarea rows="3" placeholder="Enter broadcast message details..." [(ngModel)]="broadcastMessage" style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px;"></textarea>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 1.5rem;">
+        <div>
+          <label style="display: block; font-size: 0.8rem; color: #555; margin-bottom: 0.25rem;">Type</label>
+          <select [(ngModel)]="broadcastType" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px;">
+            <option value="Information">Information</option>
+            <option value="Success">Success</option>
+            <option value="Warning">Warning</option>
+            <option value="Error">Error</option>
+            <option value="Promotion">Promotion</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.8rem; color: #555; margin-bottom: 0.25rem;">Channel</label>
+          <select [(ngModel)]="broadcastChannel" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px;">
+            <option value="InApp">In-App Drawer</option>
+            <option value="Email">Email SMTP</option>
+            <option value="SMS">SMS Gateway</option>
+            <option value="Push">Push Banner</option>
+            <option value="WhatsApp">WhatsApp Message</option>
+            <option value="Telegram">Telegram Channel</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.8rem; color: #555; margin-bottom: 0.25rem;">Priority</label>
+          <select [(ngModel)]="broadcastPriority" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px;">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="primary" style="width: 100%; padding: 0.75rem; background-color: #388e3c; border-color: #388e3c;" (click)="sendBroadcast()">
+        Broadcast to All Users
+      </button>
+    </div>
+
+  </div>
+
+  <!-- TAB 2: TEMPLATES MANAGER -->
+  <div *ngIf="activeTab === 'templates'" style="display: grid; grid-template-columns: 1fr 450px; gap: 2rem;">
+    
+    <!-- Left Table -->
+    <div class="panel" style="padding: 1.5rem; border-radius: 8px;">
+      <h3 style="margin-top: 0; margin-bottom: 1.5rem;">Pre-seeded Mail Layouts</h3>
+      
+      <table class="data-table" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="border-bottom: 2px solid #eee; text-align: left; font-size: 0.9rem; color: #666;">
+            <th style="padding: 0.75rem;">Code</th>
+            <th style="padding: 0.75rem;">Name</th>
+            <th style="padding: 0.75rem;">Default Channel</th>
+            <th style="padding: 0.75rem;">Subject Line</th>
+            <th style="padding: 0.75rem; text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of templates" style="border-bottom: 1px solid #eee; font-size: 0.9rem;">
+            <td style="padding: 0.75rem; font-weight: bold; color: #111;">{{ t.code }}</td>
+            <td style="padding: 0.75rem;">{{ t.name }}</td>
+            <td style="padding: 0.75rem; text-transform: uppercase; font-size: 0.75rem; font-weight: bold;">{{ t.channel }}</td>
+            <td style="padding: 0.75rem; color: #555; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ t.subject }}</td>
+            <td style="padding: 0.75rem; text-align: right;">
+              <button class="ghost small" style="color: #1976d2;" (click)="selectTemplate(t)">Edit</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Right Editor -->
+    <div class="panel" style="padding: 2rem; border-radius: 8px;">
+      <h3 style="margin-top: 0; color: #1976d2; margin-bottom: 1.5rem;">
+        {{ isEditingTemplate ? 'Edit Mail Template' : 'Create Mail Template' }}
+      </h3>
+      
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 0.25rem;">Template Code</label>
+        <input type="text" placeholder="WelcomeEmail, OtpEmail, etc..." [(ngModel)]="templateCode" [disabled]="isEditingTemplate" style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px;" />
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 0.25rem;">Template Friendly Name</label>
+        <input type="text" placeholder="Display name..." [(ngModel)]="templateName" style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px;" />
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 0.25rem;">Subject Line (Supports template parameters)</label>
+        <input type="text" placeholder="Subject..." [(ngModel)]="templateSubject" style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px;" />
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 0.25rem;">Channel</label>
+        <select [(ngModel)]="templateChannel" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px;">
+          <option value="Email">Email</option>
+          <option value="SMS">SMS</option>
+          <option value="Push">Push</option>
+          <option value="InApp">InApp</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 0.25rem;">HTML Body Markup</label>
+        <textarea rows="8" placeholder="HTML or text content..." [(ngModel)]="templateBody" style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 0.85rem;"></textarea>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+        <button class="ghost small" (click)="resetTemplateForm()">Cancel</button>
+        <button class="primary small" (click)="saveTemplate()">Save Template</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAB 3: DELIVERY LOGS -->
+  <div *ngIf="activeTab === 'logs'" class="panel" style="padding: 2rem; border-radius: 8px;">
+    <h3 style="margin-top: 0; margin-bottom: 1.5rem;">Delivery Status Auditing</h3>
+    
+    <table class="data-table" style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 2px solid #eee; text-align: left; font-size: 0.9rem; color: #666;">
+          <th style="padding: 0.75rem;">Log Reference ID</th>
+          <th style="padding: 0.75rem;">Target Recipient</th>
+          <th style="padding: 0.75rem;">Channel</th>
+          <th style="padding: 0.75rem;">Sent Time</th>
+          <th style="padding: 0.75rem;">Status</th>
+          <th style="padding: 0.75rem;">Error / Failure Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let l of logs" style="border-bottom: 1px solid #eee; font-size: 0.9rem;">
+          <td style="padding: 0.75rem; font-family: monospace; font-size: 0.8rem; color: #555;">{{ l.id }}</td>
+          <td style="padding: 0.75rem;">{{ l.recipient }}</td>
+          <td style="padding: 0.75rem; text-transform: uppercase; font-size: 0.75rem; font-weight: bold;">{{ l.channel }}</td>
+          <td style="padding: 0.75rem;">{{ l.sentAtUtc | date:'short' }}</td>
+          <td style="padding: 0.75rem;">
+            <span [style.background]="l.status === 'Sent' ? '#e8f5e9' : '#ffe5e5'" [style.color]="l.status === 'Sent' ? '#2e7d32' : '#c62828'" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
+              {{ l.status }}
+            </span>
+          </td>
+          <td style="padding: 0.75rem; color: #c62828; font-size: 0.85rem;">{{ l.errorMessage || '-' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;" *ngIf="logTotalCount > 20">
+      <button class="ghost small" [disabled]="logPage === 1" (click)="logPage = logPage - 1; loadLogs()">← Previous</button>
+      <span style="font-size: 0.9rem; color: #666;">Page {{ logPage }}</span>
+      <button class="ghost small" [disabled]="logs.length < 20" (click)="logPage = logPage + 1; loadLogs()">Next →</button>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,108 @@
+<div class="wishlist-page-container">
+
+  <!-- Alert Messages -->
+  <p class="notice success" *ngIf="notice">{{ notice }}</p>
+  <p class="notice error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+  <div class="panel" style="max-width: 600px; margin: 3rem auto; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
+    
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <h2 style="margin: 0; color: #333;">ShopNest Payment Gateway</h2>
+      <p style="color: #666; font-size: 0.9rem; margin-top: 0.25rem;">
+        Secure Payment Portal
+      </p>
+    </div>
+
+    <!-- Payment Redirection / Start State -->
+    <div *ngIf="!processing && !success && !failed && !errorMsg">
+      <div class="panel" style="background-color: #f5f5f5; border: 1px solid #ddd; padding: 1.25rem; border-radius: 6px; margin-bottom: 1.5rem;">
+        <h4 style="margin-top: 0;">Order Summary</h4>
+        <div style="display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 0.5rem;">
+          <span>Order ID:</span>
+          <strong class="code-font">{{ orderId }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 0.5rem;">
+          <span>Gateway Provider:</span>
+          <strong style="color: #0d47a1;">{{ provider }}</strong>
+        </div>
+        <hr style="border: 0; border-top: 1px solid #ddd; margin: 0.75rem 0;" />
+        <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: bold; color: #222;">
+          <span>Amount Payable:</span>
+          <span>${{ amount | number:'1.2-2' }} {{ currency | uppercase }}</span>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 2rem;">
+        <p style="font-size: 0.85rem; color: #666; margin-bottom: 1rem;">
+          By clicking pay, you will be redirected to the secure sandbox payment environment.
+        </p>
+        <button class="primary" style="width: 100%; padding: 0.75rem;" (click)="processMockPayment()">
+          Pay ${{ amount | number:'1.2-2' }} via {{ provider }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Processing / Loader State -->
+    <div *ngIf="processing" style="text-align: center; padding: 2rem 0;">
+      <div class="spinner"></div>
+      <h3 style="margin-top: 1.5rem; color: #333;">Connecting with {{ provider }}...</h3>
+      <p style="color: #666; font-size: 0.9rem;">
+        Do not close this window or click the back button.
+      </p>
+    </div>
+
+    <!-- Success Screen -->
+    <div *ngIf="success" style="text-align: center; padding: 1rem 0;">
+      <div style="font-size: 5rem; color: #2e7d32; margin-bottom: 1rem;">✅</div>
+      <h2 style="color: #2e7d32; margin-top: 0;">Payment Successful!</h2>
+      <p style="color: #555; max-width: 400px; margin: 0.5rem auto 2rem auto;">
+        Your transaction was processed successfully. The funds have been captured and order is marked for processing.
+      </p>
+
+      <div class="panel" style="text-align: left; background-color: #f1f8e9; border: 1px solid #c8e6c9; padding: 1rem; border-radius: 6px; font-size: 0.9rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+          <span>Transaction ID:</span>
+          <strong class="code-font">{{ transactionId }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+          <span>Amount Paid:</span>
+          <strong>${{ amount | number:'1.2-2' }} {{ currency | uppercase }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span>Status:</span>
+          <span style="font-weight: bold; color: #2e7d32;">CAPTURED / COMPLETED</span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem;">
+        <button class="ghost" style="flex-grow: 1;" (click)="downloadReceipt()">
+          {{ receiptDownloaded ? 'Receipt Saved' : 'Download Invoice Receipt' }}
+        </button>
+        <button class="primary" style="flex-grow: 1;" routerLink="/orders">
+          Go to My Orders
+        </button>
+      </div>
+    </div>
+
+    <!-- Failure Screen -->
+    <div *ngIf="failed" style="text-align: center; padding: 1rem 0;">
+      <div style="font-size: 5rem; color: #d32f2f; margin-bottom: 1rem;">❌</div>
+      <h2 style="color: #d32f2f; margin-top: 0;">Payment Failed</h2>
+      <p style="color: #555; max-width: 400px; margin: 0.5rem auto 2rem auto;">
+        We could not authorize or capture this payment. Reason: {{ errorMsg }}
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <button class="primary" (click)="processMockPayment()">
+          Retry Payment Process
+        </button>
+        <button class="ghost" routerLink="/cart">
+          Return to Cart
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</div>

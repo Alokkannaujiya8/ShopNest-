@@ -1,4 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal, effect } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { Subject } from 'rxjs';
 import { ApiService } from './api.service';
@@ -34,16 +34,24 @@ export class SignalrService {
   readonly onlineStats = signal<OnlineDashboardStats | null>(null);
   readonly notifications = signal<HubNotification[]>([]);
   readonly orderStatusChanged$ = new Subject<any>();
+  readonly notificationReceived$ = new Subject<any>();
+  readonly unreadCount = signal<number>(0);
   readonly connectionState = signal<'Connected' | 'Disconnected' | 'Connecting' | 'Reconnecting'>('Disconnected');
 
   private heartbeatInterval: any;
 
-  constructor() {}
-
-  init(): void {
-    const user = this.api.currentUser();
-    this.connect();
+  constructor() {
+    effect(() => {
+      const user = this.api.currentUser();
+      if (user) {
+        this.connect();
+      } else {
+        void this.disconnect();
+      }
+    });
   }
+
+  init(): void {}
 
   private connect(): void {
     if (this.hubConnection) {
@@ -79,12 +87,17 @@ export class SignalrService {
       this.onlineStats.set(stats);
     });
 
-    this.hubConnection.on('notificationReceived', (notification: HubNotification) => {
+    this.hubConnection.on('notificationReceived', (notification: any) => {
       this.notifications.update((prev) => [notification, ...prev].slice(0, 50));
+      this.notificationReceived$.next(notification);
     });
 
     this.hubConnection.on('orderStatusChanged', (order: any) => {
       this.orderStatusChanged$.next(order);
+    });
+
+    this.hubConnection.on('unreadCountUpdated', (count: number) => {
+      this.unreadCount.set(count);
     });
 
     this.hubConnection
@@ -92,6 +105,10 @@ export class SignalrService {
       .then(() => {
         console.log('SignalR connection established.');
         this.connectionState.set('Connected');
+
+        this.api.getUnreadNotificationsCount().subscribe({
+          next: (count) => this.unreadCount.set(count)
+        });
         
         this.heartbeatInterval = setInterval(() => {
           if (this.hubConnection?.state === signalR.HubConnectionState.Connected) {
@@ -99,7 +116,7 @@ export class SignalrService {
           }
         }, 15000);
       })
-      .catch((err) => {
+      .catch((err: any) => {
         console.error('Error starting SignalR connection:', err);
         this.connectionState.set('Disconnected');
       });

@@ -1,0 +1,131 @@
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.svg-element {
+  width: 100%;
+  height: auto;
+  max-height: 350px;
+}
+
+.pie-svg {
+  max-width: 320px;
+}
+
+.grid-line {
+  stroke: #eceff1;
+  stroke-width: 1px;
+  stroke-dasharray: 4 4;
+}
+
+.axis-line {
+  stroke: #cfd8dc;
+  stroke-width: 1.5px;
+}
+
+.axis-text {
+  font-size: 0.65rem;
+  fill: #78909c;
+  font-family: inherit;
+}
+
+.x-label {
+  text-anchor: middle;
+}
+
+.y-label {
+  text-anchor: end;
+}
+
+.chart-line {
+  fill: none;
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.area-fill {
+  opacity: 0.12;
+}
+
+.data-circle {
+  stroke: #ffffff;
+  stroke-width: 1.5px;
+  cursor: pointer;
+  transition: r 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  &:hover {
+    r: 7;
+  }
+}
+
+.bar-rect {
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.pie-slice {
+  cursor: pointer;
+  stroke: #ffffff;
+  stroke-width: 2px;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.pie-slice-label {
+  font-size: 0.75rem;
+  font-weight: bold;
+  fill: #ffffff;
+  text-anchor: middle;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.chart-tooltip {
+  position: absolute;
+  bottom: 10px;
+  background: rgba(33, 33, 33, 0.95);
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  text-align: center;
+  min-width: 80px;
+  animation: tooltipFade 0.15s ease-out;
+
+  .tooltip-label {
+    font-weight: bold;
+    margin-bottom: 2px;
+    color: #b0bec5;
+  }
+
+  .tooltip-value {
+    font-size: 0.85rem;
+    font-weight: bold;
+  }
+}
+
+@keyframes tooltipFade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

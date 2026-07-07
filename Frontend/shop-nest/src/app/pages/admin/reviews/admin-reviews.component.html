@@ -1,0 +1,189 @@
+<div class="wishlist-page-container" style="max-width: 1300px; margin: 0 auto; padding: 2rem;">
+
+  <!-- Page Head -->
+  <section class="page-head" style="margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <p class="eyebrow" style="text-transform: uppercase; color: #888; letter-spacing: 1px; font-size: 0.8rem; margin: 0;">Admin Console</p>
+      <h1 style="margin: 0.25rem 0 0 0; font-size: 2.2rem; color: #222;">Review Moderation Control</h1>
+    </div>
+  </section>
+
+  <!-- Notices -->
+  <p class="notice success" *ngIf="notice">{{ notice }}</p>
+  <p class="notice error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+  <!-- Layout Grid -->
+  <div class="dashboard-grid" style="display: grid; grid-template-columns: 420px 1fr; gap: 2rem; align-items: start;">
+
+    <!-- Left Side: Moderation Feed -->
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+      
+      <!-- Filters and Search -->
+      <div class="panel" style="padding: 1.25rem; border-radius: 8px;">
+        <h4 style="margin: 0 0 1rem 0;">Search & Filters</h4>
+        
+        <input 
+          type="text" 
+          placeholder="Search by title, desc, product..." 
+          [(ngModel)]="searchQuery" 
+          (input)="loadReviews()" 
+          style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 0.75rem; font-size: 0.9rem;" />
+
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+          <select 
+            [(ngModel)]="statusFilter" 
+            (change)="loadReviews()" 
+            style="flex-grow: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.85rem;">
+            <option value="">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Hidden">Hidden</option>
+          </select>
+
+          <select 
+            [(ngModel)]="ratingFilter" 
+            (change)="loadReviews()" 
+            style="flex-grow: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.85rem;">
+            <option value="">All Ratings</option>
+            <option value="5">5 Stars</option>
+            <option value="4">4 Stars</option>
+            <option value="3">3 Stars</option>
+            <option value="2">2 Stars</option>
+            <option value="1">1 Star</option>
+          </select>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #666;">
+          <span>Total reviews: {{ totalItems }}</span>
+          <a style="cursor: pointer; text-decoration: underline; color: #1976d2;" (click)="searchQuery = ''; statusFilter = ''; ratingFilter = ''; loadReviews();">Reset</a>
+        </div>
+      </div>
+
+      <!-- Feed Feed -->
+      <div style="max-height: 600px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;">
+        <article 
+          class="panel" 
+          *ngFor="let r of reviews"
+          (click)="selectReview(r)"
+          [style.borderColor]="selectedReview?.id === r.id ? '#1976d2' : '#ddd'"
+          [style.boxShadow]="selectedReview?.id === r.id ? '0 4px 12px rgba(25,118,210,0.12)' : 'none'"
+          style="padding: 1.25rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; border-left: 4px solid #ddd;">
+          
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+            <div>
+              <strong style="font-size: 1.05rem; color: #111;">{{ r.reviewTitle }}</strong>
+              <p style="margin: 0.2rem 0 0 0; font-size: 0.8rem; color: #666;">
+                By {{ r.userFullName }}
+              </p>
+            </div>
+            <span class="status-pill" [attr.data-status]="r.status" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; font-weight: bold; text-transform: uppercase;">
+              {{ r.status }}
+            </span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; border-top: 1px solid #f0f0f0; padding-top: 0.5rem; font-size: 0.85rem; color: #555;">
+            <span>Rating: <strong>{{ r.rating }} ★</strong></span>
+            <span style="color: #c62828;" *ngIf="r.isReported">⚠️ REPORTED</span>
+          </div>
+
+        </article>
+        
+        <p class="muted" *ngIf="!reviews.length" style="text-align: center; padding: 3rem 0; color: #999;">
+          No reviews found.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Right Side: Moderation Editor -->
+    <div>
+      
+      <!-- Placeholder -->
+      <div class="panel" *ngIf="!selectedReview" style="padding: 5rem 2rem; text-align: center; border-radius: 8px;">
+        <span style="font-size: 4rem; color: #ccc;">⚖️</span>
+        <h3 style="margin-top: 1.5rem; color: #444;">Select a Review to Moderate</h3>
+        <p style="color: #777; font-size: 0.95rem; max-width: 320px; margin: 0.5rem auto 0 auto;">
+          Click on any review from the left feed list to approve, reject, hide, report details, or edit admin audit notes.
+        </p>
+      </div>
+
+      <!-- Detail Card -->
+      <div class="panel" *ngIf="selectedReview" style="padding: 2rem; border-radius: 8px; display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <div style="border-bottom: 1px solid #eee; padding-bottom: 1rem; display: flex; justify-content: space-between; align-items: start;">
+          <div>
+            <h3 style="margin: 0; font-size: 1.3rem;">{{ selectedReview.reviewTitle }}</h3>
+            <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.85rem;">
+              Product: <strong>{{ selectedReview.productName }}</strong> (ID: {{ selectedReview.productId }})
+            </p>
+          </div>
+          <span class="status-pill" [attr.data-status]="selectedReview.status" style="font-size: 0.85rem; padding: 0.3rem 0.8rem; border-radius: 12px; font-weight: bold; text-transform: uppercase;">
+            {{ selectedReview.status }}
+          </span>
+        </div>
+
+        <!-- Meta Details -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.9rem; background: #fafafa; padding: 1rem; border-radius: 6px; border: 1px solid #eee;">
+          <div>Reviewer Name: <strong>{{ selectedReview.userFullName }}</strong></div>
+          <div>Reviewer ID: <strong>{{ selectedReview.userId }}</strong></div>
+          <div>Verified Purchase? <strong>{{ selectedReview.orderId ? 'Yes' : 'No' }}</strong></div>
+          <div>Estimated Date: <strong>{{ selectedReview.createdAtUtc | date:'short' }}</strong></div>
+          <div>Recommends Product? <strong>{{ selectedReview.isRecommended ? 'Yes' : 'No' }}</strong></div>
+          <div>Helpful Likes count: <strong>{{ selectedReview.helpfulCount }}</strong></div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <h4 style="margin: 0 0 0.5rem 0;">Review Description</h4>
+          <p style="margin: 0; line-height: 1.5; color: #333; background: #fff; border: 1px solid #eee; padding: 1rem; border-radius: 6px;">
+            {{ selectedReview.reviewDescription }}
+          </p>
+        </div>
+
+        <!-- Image strip -->
+        <div *ngIf="selectedReview.reviewImages && selectedReview.reviewImages.length > 0">
+          <h4 style="margin: 0 0 0.5rem 0;">Attached Images</h4>
+          <div style="display: flex; gap: 0.5rem;">
+            <img *ngFor="let img of selectedReview.reviewImages" [src]="img" style="width: 100px; height: 100px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd;" alt="preview" />
+          </div>
+        </div>
+
+        <!-- Report Reasons -->
+        <div *ngIf="selectedReview.isReported" style="background: #ffe5e5; border-left: 4px solid #d32f2f; padding: 1rem; border-radius: 4px;">
+          <strong style="color: #c62828;">Review Report Reason:</strong>
+          <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; color: #333;">{{ selectedReview.reportReason }}</p>
+        </div>
+
+        <!-- Moderation Inputs -->
+        <div>
+          <label style="display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 0.25rem;">Admin Moderation Notes</label>
+          <textarea rows="3" placeholder="Write internal audit notes..." [(ngModel)]="adminNotes" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem;"></textarea>
+        </div>
+
+        <!-- Action triggers -->
+        <div style="display: flex; gap: 0.5rem; border-top: 1px solid #eee; padding-top: 1.5rem; margin-top: 1rem;">
+          <button class="primary" style="background-color: #2e7d32; border-color: #2e7d32; padding: 0.5rem 1.25rem;" (click)="moderate('Approved')">
+            Approve Review
+          </button>
+          
+          <button class="primary" style="background-color: #e65100; border-color: #e65100; padding: 0.5rem 1.25rem;" (click)="moderate('Rejected')">
+            Reject Review
+          </button>
+
+          <button class="primary" style="background-color: #7b1fa2; border-color: #7b1fa2; padding: 0.5rem 1.25rem;" (click)="moderate('Hidden')">
+            Hide Review
+          </button>
+
+          <button class="danger" style="padding: 0.5rem 1.25rem; margin-left: auto;" (click)="deleteReview(selectedReview)">
+            Soft Delete Review
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

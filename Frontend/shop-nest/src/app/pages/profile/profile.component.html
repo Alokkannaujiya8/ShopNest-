@@ -1,0 +1,447 @@
+<section class="profile-container">
+  <div class="profile-layout">
+    
+    <!-- LEFT SIDEBAR: PROFILE SUMMARY & NAVIGATION -->
+    <div class="profile-sidebar panel">
+      <div class="summary-card">
+        <div class="avatar-container">
+          <div class="avatar-img" *ngIf="profileData?.profilePictureUrl; else textAvatar">
+            <img [src]="profileData?.profilePictureUrl" alt="Profile Picture" />
+          </div>
+          <ng-template #textAvatar>
+            <div class="avatar-text">
+              {{ profileData?.fullName?.charAt(0)?.toUpperCase() || 'U' }}
+            </div>
+          </ng-template>
+          
+          <label class="upload-btn" title="Change Profile Picture">
+            📷
+            <input type="file" (change)="onProfilePictureSelected($event)" accept="image/*" style="display: none;" />
+          </label>
+          <button class="delete-pic-btn" *ngIf="profileData?.profilePictureUrl" (click)="deleteProfilePicture()" type="button" title="Delete Profile Picture">
+            ×
+          </button>
+        </div>
+
+        <div class="user-meta">
+          <h2>{{ profileData?.fullName || 'ShopNest User' }}</h2>
+          <p class="role-badge">{{ api.currentUser()?.role }}</p>
+          <p class="email-text">{{ api.currentUser()?.email }}</p>
+        </div>
+      </div>
+
+      <nav class="profile-tabs">
+        <button type="button" [class.active]="activeTab === 'profile'" (click)="switchTab('profile')">
+          <span class="icon">👤</span> My Profile
+        </button>
+        <button type="button" [class.active]="activeTab === 'addresses'" (click)="switchTab('addresses')">
+          <span class="icon">📍</span> Shipping Addresses
+        </button>
+        <button type="button" [class.active]="activeTab === 'orders'" (click)="switchTab('orders')">
+          <span class="icon">📦</span> Order History
+        </button>
+        <button type="button" [class.active]="activeTab === 'wishlist'" (click)="switchTab('wishlist')">
+          <span class="icon">❤️</span> My Wishlist
+        </button>
+        <button type="button" [class.active]="activeTab === 'reviews'" (click)="switchTab('reviews')">
+          <span class="icon">⭐</span> My Reviews
+        </button>
+        <button type="button" [class.active]="activeTab === 'password'" (click)="switchTab('password')">
+          <span class="icon">🔑</span> Change Password
+        </button>
+      </nav>
+    </div>
+
+    <!-- RIGHT CONTENT AREA -->
+    <div class="profile-content panel">
+      <!-- Success / Error Notice Banners -->
+      <div class="notice success-notice" *ngIf="message">{{ message }}</div>
+      <div class="notice error-notice" *ngIf="error">{{ error }}</div>
+
+      <!-- TAB 1: PROFILE DETAILS -->
+      <div *ngIf="activeTab === 'profile'" class="tab-pane">
+        <div class="pane-header">
+          <h3>Personal Details</h3>
+          <button *ngIf="!isEditingProfile" class="secondary" (click)="startEditingProfile()">Edit Profile</button>
+        </div>
+
+        <form (ngSubmit)="saveProfile()" #profileForm="ngForm" class="profile-form">
+          <div class="form-grid">
+            <label class="form-field">
+              Full Name
+              <input name="fullName" [(ngModel)]="editFullName" [disabled]="!isEditingProfile" required />
+            </label>
+
+            <label class="form-field">
+              Email Address (Read Only)
+              <input type="email" [value]="profileData?.email" disabled />
+            </label>
+
+            <label class="form-field">
+              Mobile Number
+              <input name="mobileNumber" [(ngModel)]="editMobileNumber" [disabled]="!isEditingProfile" required />
+            </label>
+
+            <label class="form-field">
+              Date of Birth
+              <input type="date" name="dateOfBirth" [(ngModel)]="editDateOfBirth" [disabled]="!isEditingProfile" />
+            </label>
+
+            <div class="form-field">
+              Gender
+              <div class="gender-radio-group">
+                <label>
+                  <input type="radio" name="gender" value="Male" [(ngModel)]="editGender" [disabled]="!isEditingProfile" />
+                  Male
+                </label>
+                <label>
+                  <input type="radio" name="gender" value="Female" [(ngModel)]="editGender" [disabled]="!isEditingProfile" />
+                  Female
+                </label>
+                <label>
+                  <input type="radio" name="gender" value="Other" [(ngModel)]="editGender" [disabled]="!isEditingProfile" />
+                  Other
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <label class="form-field full-width">
+            Bio
+            <textarea name="bio" [(ngModel)]="editBio" [disabled]="!isEditingProfile" rows="4" placeholder="Tell us about yourself..."></textarea>
+          </label>
+
+          <div class="form-actions" *ngIf="isEditingProfile">
+            <button type="button" class="ghost" (click)="cancelEditingProfile()">Cancel</button>
+            <button type="submit" class="primary" [disabled]="loading || !profileForm.form.valid">Save Changes</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- TAB 2: ADDRESSES -->
+      <div *ngIf="activeTab === 'addresses'" class="tab-pane">
+        <div class="pane-header">
+          <h3>Shipping Addresses</h3>
+          <button class="primary" (click)="openAddAddressModal()">+ Add New</button>
+        </div>
+
+        <div class="addresses-grid" *ngIf="addressesList.length > 0; else noAddresses">
+          <div class="address-card" *ngFor="let addr of addressesList" [class.default-card]="addr.isDefault">
+            <div class="card-header">
+              <span class="type-badge">{{ addr.addressType }}</span>
+              <span class="default-badge" *ngIf="addr.isDefault">Default</span>
+            </div>
+
+            <div class="card-body">
+              <strong>{{ addr.fullName }}</strong>
+              <p class="phone">{{ addr.mobileNumber }} <span *ngIf="addr.alternateMobile">/ {{ addr.alternateMobile }}</span></p>
+              <p class="lines">
+                {{ addr.addressLine1 }}<br/>
+                <span *ngIf="addr.addressLine2">{{ addr.addressLine2 }}<br/></span>
+                {{ addr.area }}, {{ addr.landmark ? addr.landmark + ', ' : '' }}{{ addr.city }} - {{ addr.postalCode }}
+              </p>
+              <p class="region">{{ addr.state }}, {{ addr.country }}</p>
+            </div>
+
+            <div class="card-actions">
+              <button *ngIf="!addr.isDefault" type="button" class="link-btn" (click)="setDefaultAddress(addr.id)">Set Default</button>
+              <button type="button" class="link-btn" (click)="openEditAddressModal(addr)">Edit</button>
+              <button type="button" class="link-btn delete-btn" (click)="deleteAddress(addr.id)">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noAddresses>
+          <div class="empty-state">
+            <p>You haven't saved any addresses yet.</p>
+            <button class="secondary" (click)="openAddAddressModal()">Add Address</button>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- TAB 3: ORDERS -->
+      <div *ngIf="activeTab === 'orders'" class="tab-pane">
+        <h3>Order History</h3>
+        
+        <div class="orders-list" *ngIf="ordersList.length > 0; else noOrders">
+          <div class="order-item" *ngFor="let order of ordersList">
+            <div class="order-summary" (click)="toggleOrderDetails(order.id)">
+              <div class="info-group">
+                <span class="label">Order Number</span>
+                <strong>{{ order.orderNumber }}</strong>
+              </div>
+              <div class="info-group">
+                <span class="label">Status</span>
+                <span class="status-badge" [attr.data-status]="order.status.toLowerCase()">{{ order.status }}</span>
+              </div>
+              <div class="info-group">
+                <span class="label">Total Amount</span>
+                <strong>INR {{ order.totalAmount.toFixed(2) }}</strong>
+              </div>
+              <div class="toggle-icon">
+                {{ expandedOrderId === order.id ? '▲' : '▼' }}
+              </div>
+            </div>
+
+            <div class="order-details" *ngIf="expandedOrderId === order.id">
+              <div class="details-section">
+                <p><strong>Shipping Address:</strong> {{ order.shippingAddress }}</p>
+                <button type="button" class="secondary invoice-btn" (click)="downloadInvoice(order)">
+                  📄 Download Invoice
+                </button>
+              </div>
+
+              <div class="items-table">
+                <div class="table-header">
+                  <span>Product</span>
+                  <span class="text-right">Qty</span>
+                  <span class="text-right">Price</span>
+                  <span class="text-right">Total</span>
+                </div>
+                <div class="table-row" *ngFor="let item of order.items">
+                  <span>{{ item.productName }}</span>
+                  <span class="text-right">{{ item.quantity }}</span>
+                  <span class="text-right">INR {{ item.unitPrice.toFixed(2) }}</span>
+                  <span class="text-right">INR {{ item.lineTotal.toFixed(2) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noOrders>
+          <div class="empty-state">
+            <p>You haven't placed any orders yet.</p>
+            <a class="secondary button-link" routerLink="/catalog">Browse Shop</a>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- TAB 4: WISHLIST -->
+      <div *ngIf="activeTab === 'wishlist'" class="tab-pane">
+        <h3>My Wishlist</h3>
+
+        <div class="wishlist-grid" *ngIf="wishlistItems.length > 0; else noWishlist">
+          <div class="wishlist-card" *ngFor="let prod of wishlistItems">
+            <div class="product-img">
+              <img *ngIf="prod.images && prod.images.length > 0; else noImg" [src]="prod.images[0].url" [alt]="prod.name" />
+              <ng-template #noImg>
+                <div class="placeholder-img">🛍️</div>
+              </ng-template>
+            </div>
+            
+            <div class="product-info">
+              <h4>{{ prod.name }}</h4>
+              <p class="category-name">{{ prod.category?.name }}</p>
+              <strong class="price">INR {{ prod.price.toFixed(2) }}</strong>
+            </div>
+
+            <div class="wishlist-actions">
+              <button class="primary" (click)="moveWishlistToCart(prod.id)">Add to Cart</button>
+              <button class="ghost delete-wish-btn" (click)="removeFromWishlist(prod.id)">Remove</button>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noWishlist>
+          <div class="empty-state">
+            <p>Your wishlist is empty.</p>
+            <a class="secondary button-link" routerLink="/catalog">Explore Products</a>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- TAB 5: CHANGE PASSWORD -->
+      <div *ngIf="activeTab === 'password'" class="tab-pane">
+        <h3>Change Password</h3>
+
+        <form (ngSubmit)="changePassword()" #passwordForm="ngForm" class="password-form">
+          <label class="form-field">
+            Current Password
+            <input type="password" name="currentPassword" [(ngModel)]="currentPassword" required placeholder="••••••••" />
+          </label>
+
+          <label class="form-field">
+            New Password
+            <input type="password" name="newPassword" [(ngModel)]="newPassword" (ngModelChange)="onPasswordChange($event)" required minlength="8" placeholder="••••••••" />
+          </label>
+
+          <!-- Password Strength Meter -->
+          <div class="strength-meter" *ngIf="newPassword">
+            <div class="strength-track">
+              <div class="strength-fill" [ngClass]="strengthClass"></div>
+            </div>
+            <span class="strength-text">Password Strength: <strong>{{ strengthLabel }}</strong></span>
+          </div>
+
+          <label class="form-field">
+            Confirm New Password
+            <input type="password" name="confirmPassword" [(ngModel)]="confirmPassword" required minlength="8" placeholder="••••••••" />
+          </label>
+
+          <button type="submit" class="primary" [disabled]="loading || !passwordForm.form.valid">
+            Change Password
+          </button>
+        </form>
+      </div>
+      <!-- TAB 6: MY REVIEWS -->
+      <div *ngIf="activeTab === 'reviews'" class="tab-pane">
+        <h3>My Reviews</h3>
+        
+        <div class="reviews-list" *ngIf="reviewsList.length > 0; else noReviews">
+          <div class="review-item panel" *ngFor="let r of reviewsList" style="padding: 1.25rem; margin-bottom: 1rem; border: 1px solid var(--line);">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+              <div>
+                <h4 style="margin: 0; font-size: 1.05rem;">{{ r.productName }}</h4>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+                  <span style="color: var(--accent); font-weight: bold;">{{ r.rating }} ★</span>
+                  <span style="font-size: 0.8rem; color: var(--muted);">{{ r.createdAt | date:'mediumDate' }}</span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button class="ghost" style="padding: 0.25rem 0.5rem;" (click)="openEditReviewModal(r)">Edit</button>
+                <button class="ghost" style="padding: 0.25rem 0.5rem; border-color: #d32f2f; color: #d32f2f;" (click)="deleteReview(r.id)">Delete</button>
+              </div>
+            </div>
+            <p style="font-weight: 600; margin: 0.5rem 0 0.25rem;">{{ r.reviewTitle }}</p>
+            <p style="margin: 0; color: var(--muted); font-size: 0.9rem;">{{ r.reviewDescription }}</p>
+          </div>
+        </div>
+        <ng-template #noReviews>
+          <p style="text-align: center; padding: 2rem; color: var(--muted);">You haven't reviewed any products yet.</p>
+        </ng-template>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- CUSTOM EDIT REVIEW MODAL -->
+<div class="modal-overlay" *ngIf="editingReview" (click)="closeEditReviewModal()">
+  <div class="modal-card panel" (click)="$event.stopPropagation()" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3>Edit Review</h3>
+      <button class="close-btn" type="button" (click)="closeEditReviewModal()">×</button>
+    </div>
+
+    <form (ngSubmit)="saveReviewEdit()" #reviewEditForm="ngForm" class="modal-form" style="display: flex; flex-direction: column; gap: 1rem; padding: 1rem;">
+      <label class="form-field">
+        Rating (1 to 5 Stars)
+        <select name="rating" [(ngModel)]="editReviewRating">
+          <option [value]="5">5 Stars</option>
+          <option [value]="4">4 Stars</option>
+          <option [value]="3">3 Stars</option>
+          <option [value]="2">2 Stars</option>
+          <option [value]="1">1 Star</option>
+        </select>
+      </label>
+
+      <label class="form-field">
+        Review Title
+        <input name="reviewTitle" [(ngModel)]="editReviewTitle" required placeholder="Summarize your experience..." />
+      </label>
+
+      <label class="form-field">
+        Review Description
+        <textarea name="reviewDescription" [(ngModel)]="editReviewDescription" required rows="4" placeholder="Tell us more about the product..." style="padding: 0.5rem;"></textarea>
+      </label>
+
+      <div class="modal-actions" style="margin-top: 1rem; display: flex; justify-content: flex-end; gap: 0.5rem;">
+        <button type="button" class="ghost" (click)="closeEditReviewModal()">Cancel</button>
+        <button type="submit" class="primary" [disabled]="loading || !reviewEditForm.form.valid">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- CUSTOM ADDRESS MODAL -->
+<div class="modal-overlay" *ngIf="isAddressModalOpen" (click)="closeAddressModal()">
+  <div class="modal-card panel" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ isEditingAddress ? 'Edit Address' : 'Add New Address' }}</h3>
+      <button class="close-btn" type="button" (click)="closeAddressModal()">×</button>
+    </div>
+
+    <form (ngSubmit)="saveAddress()" #addressForm="ngForm" class="modal-form">
+      <div class="form-grid">
+        <label class="form-field">
+          Recipient's Name
+          <input name="fullName" [(ngModel)]="addrFullName" required placeholder="John Doe" />
+        </label>
+
+        <label class="form-field">
+          Mobile Number
+          <input name="mobileNumber" [(ngModel)]="addrMobileNumber" required placeholder="e.g. 9876543210" />
+        </label>
+
+        <label class="form-field">
+          Alternate Mobile (Optional)
+          <input name="alternateMobile" [(ngModel)]="addrAlternateMobile" placeholder="e.g. 9876543211" />
+        </label>
+
+        <label class="form-field">
+          Country
+          <input name="country" [(ngModel)]="addrCountry" required />
+        </label>
+
+        <label class="form-field">
+          State
+          <input name="state" [(ngModel)]="addrState" required placeholder="e.g. Delhi" />
+        </label>
+
+        <label class="form-field">
+          City
+          <input name="city" [(ngModel)]="addrCity" required placeholder="e.g. New Delhi" />
+        </label>
+
+        <label class="form-field">
+          Area / Locality
+          <input name="area" [(ngModel)]="addrArea" required placeholder="e.g. Connaught Place" />
+        </label>
+
+        <label class="form-field">
+          Landmark (Optional)
+          <input name="landmark" [(ngModel)]="addrLandmark" placeholder="e.g. Near Metro Station" />
+        </label>
+
+        <label class="form-field">
+          Postal Code / Zip
+          <input name="postalCode" [(ngModel)]="addrPostalCode" required placeholder="e.g. 110001" />
+        </label>
+
+        <label class="form-field full-width">
+          Address Line 1
+          <input name="addressLine1" [(ngModel)]="addrAddressLine1" required placeholder="e.g. Flat 101, Building Name" />
+        </label>
+
+        <label class="form-field full-width">
+          Address Line 2 (Optional)
+          <input name="addressLine2" [(ngModel)]="addrAddressLine2" placeholder="e.g. Sector, Street Name" />
+        </label>
+
+        <label class="form-field">
+          Address Type
+          <select name="addressType" [(ngModel)]="addrAddressType">
+            <option value="Home">Home (All day delivery)</option>
+            <option value="Office">Office (10 AM - 5 PM delivery)</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+
+        <div class="form-field checkbox-field">
+          <label class="checkbox-container">
+            <input type="checkbox" name="isDefault" [(ngModel)]="addrIsDefault" />
+            <span class="checkmark"></span>
+            Set as Default Address
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="ghost" (click)="closeAddressModal()">Cancel</button>
+        <button type="submit" class="primary" [disabled]="loading || !addressForm.form.valid">Save Address</button>
+      </div>
+    </form>
+  </div>
+</div>
