@@ -375,6 +375,23 @@ public static class DbSeeder
                 }
             };
 
+            foreach (var p in products)
+            {
+                p.IsPublished = true;
+                if (p.Name is "Espresso Coffee Machine" or "Smart Touch Air Fryer" or "Pro Edition Smartphone")
+                {
+                    p.IsFeatured = true;
+                }
+                else if (p.Name is "Ultra-Light Running Sneakers" or "Smart OLED TV 55 inch")
+                {
+                    p.IsNewArrival = true;
+                }
+                else if (p.Name is "The Pragmatic Programmer" or "Clean Architecture by Robert C. Martin")
+                {
+                    p.IsBestSeller = true;
+                }
+            }
+
             await context.Products.AddRangeAsync(products);
             await context.SaveChangesAsync();
         }
