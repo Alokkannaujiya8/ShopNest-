@@ -99,7 +99,7 @@ label {
   gap: 0.4rem;
 }
 
-input,
+input:not([type="radio"]):not([type="checkbox"]),
 select,
 textarea {
   background: var(--panel);
